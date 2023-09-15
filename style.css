@@ -90,3 +90,20 @@ body {
     border-radius: 20px;
     cursor: pointer;
 }
+/* Style for the content box container */
+        .content-box-container {
+            position: relative;
+            z-index: 1;
+            margin: 20px; /* Adjust margin as needed */
+            padding: 20px; /* Adjust padding as needed */
+            text-align: center; /* Center the content */
+        }
+
+        /* Style for the content box */
+        .content-box {
+            background-color: rgba(255, 255, 255, 0.7); /* Semi-transparent white background */
+            backdrop-filter: blur(10px); /* Apply a Gaussian blur with a radius of 10px to the background */
+            border-radius: 20px; /* Rounded corners on all sides */
+            padding: 20px; /* Spacing inside the content box */
+            color: black; /* Text color */
+        }
