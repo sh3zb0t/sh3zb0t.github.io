@@ -1,6 +1,6 @@
 /* Body styles */
 body {
-    background-image: url('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn07.bdsmlr.com%2Fuploads%2Fphotos%2F2019%2F08%2F90052%2Fbdsmlr-90052-faaP4XwzjK.jpg&f=1&nofb=1&ipt=036904c002b9a43a84cdc295ea33cbd0c09f97a7626bb9edf28f16b0c1d1ebd6&ipo=images');
+    background-image: url('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fimg00.deviantart.net%2F9d39%2Fi%2F2012%2F004%2F1%2F9%2Fminecraft___kiss_by_kairi_chan16-d4lbnlo.jpg&f=1&nofb=1&ipt=25c7fb9f420561282599f8964e224290f32cc114da0117c02edc5b8ebb3a6e6e&ipo=images'); /* Replace 'landscape.jpg' with the path to your landscape background image */
     background-size: 100% 100%;
     background-repeat: no-repeat;
     background-attachment: fixed;
@@ -8,6 +8,12 @@ body {
     padding: 0;
 }
 
+/* Background for portrait screens */
+@media (orientation: portrait) {
+    body {
+        background-image: url('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn07.bdsmlr.com%2Fuploads%2Fphotos%2F2019%2F08%2F90052%2Fbdsmlr-90052-faaP4XwzjK.jpg&f=1&nofb=1&ipt=036904c002b9a43a84cdc295ea33cbd0c09f97a7626bb9edf28f16b0c1d1ebd6&ipo=images'); /* Replace 'portrait.jpg' with the path to your portrait background image */
+    }
+}
 /* Navigation bar styles */
 .top-panel {
     background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background for contrast */
