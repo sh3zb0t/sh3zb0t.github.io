@@ -1,24 +1,86 @@
+/* Body styles */
 body {
-            background-image: url('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn07.bdsmlr.com%2Fuploads%2Fphotos%2F2019%2F08%2F90052%2Fbdsmlr-90052-faaP4XwzjK.jpg&f=1&nofb=1&ipt=036904c002b9a43a84cdc295ea33cbd0c09f97a7626bb9edf28f16b0c1d1ebd6&ipo=images'); /* Replace 'your-image.jpg' with the path to your image */
-            background-size: 100% 100%;
-            background-repeat: no-repeat;
-            background-attachment: fixed;
-            margin: 20px; /* Add margin to the body element */
-            padding: 0;
-        }
+    background-image: url('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn07.bdsmlr.com%2Fuploads%2Fphotos%2F2019%2F08%2F90052%2Fbdsmlr-90052-faaP4XwzjK.jpg&f=1&nofb=1&ipt=036904c002b9a43a84cdc295ea33cbd0c09f97a7626bb9edf28f16b0c1d1ebd6&ipo=images');
+    background-size: 100% 100%;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    margin: 20px; /* Add margin to the body element */
+    padding: 0;
+}
 
-        /* Style for the navigation bar */
-        .top-panel {
-            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background for contrast */
-            padding: 10px; /* Spacing inside the panel */
-            color: white; /* Text color */
-            border-radius: 20px; /* Rounded corners on all sides */
-            backdrop-filter: blur(10px); /* Apply a Gaussian blur with a radius of 10px to the background under the panel */
-        }
+/* Navigation bar styles */
+.top-panel {
+    background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background for contrast */
+    padding: 10px; /* Spacing inside the panel */
+    color: white; /* Text color */
+    border-radius: 20px; /* Rounded corners on all sides */
+    backdrop-filter: blur(10px); /* Apply a Gaussian blur with a radius of 10px to the background under the panel */
+}
 
-        /* Style for the navigation links */
-        .top-panel a {
-            color: white;
-            text-decoration: none;
-            margin: 0 10px; /* Add some spacing between the links */
-        }
+/* Navigation link styles */
+.top-panel a {
+    color: white;
+    text-decoration: none;
+    margin: 0 10px; /* Add some spacing between the links */
+}
+
+/* Dropdown container styles */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+/* Dropdown button styles */
+.dropbtn {
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 20px;
+    cursor: pointer;
+}
+
+/* Dropdown content styles (hidden by default) */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.7);
+    min-width: 160px;
+    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
+    border-radius: 0 0 20px 20px; /* Rounded corners only at the bottom */
+}
+
+/* Dropdown link styles */
+.dropdown-content a {
+    color: white;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+/* Change link color on hover */
+.dropdown-content a:hover {
+    background-color: #f1f1f1;
+    color: black;
+}
+
+/* Show the dropdown content when the dropdown is hovered over */
+.dropdown:hover .dropdown-content {
+    display: block;
+}
+
+/* Dropdown button styles on hover */
+.dropdown:hover .dropbtn.instant-hover {
+    border-radius: 20px 20px 0 0; /* Rounded top corners, square bottom corners */
+    border-bottom-right-radius: 0; /* Bottom-right side rounding facing outwards */
+}
+
+/* Dropdown button styles with instant border-radius change */
+.dropbtn.instant-hover {
+    background-color: rgba(0, 0, 0, 0.7);
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 20px;
+    cursor: pointer;
+}
