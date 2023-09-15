@@ -1,0 +1,24 @@
+body {
+            background-image: url('https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Fcdn07.bdsmlr.com%2Fuploads%2Fphotos%2F2019%2F08%2F90052%2Fbdsmlr-90052-faaP4XwzjK.jpg&f=1&nofb=1&ipt=036904c002b9a43a84cdc295ea33cbd0c09f97a7626bb9edf28f16b0c1d1ebd6&ipo=images'); /* Replace 'your-image.jpg' with the path to your image */
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            margin: 20px; /* Add margin to the body element */
+            padding: 0;
+        }
+
+        /* Style for the navigation bar */
+        .top-panel {
+            background-color: rgba(0, 0, 0, 0.7); /* Semi-transparent background for contrast */
+            padding: 10px; /* Spacing inside the panel */
+            color: white; /* Text color */
+            border-radius: 20px; /* Rounded corners on all sides */
+            backdrop-filter: blur(10px); /* Apply a Gaussian blur with a radius of 10px to the background under the panel */
+        }
+
+        /* Style for the navigation links */
+        .top-panel a {
+            color: white;
+            text-decoration: none;
+            margin: 0 10px; /* Add some spacing between the links */
+        }
