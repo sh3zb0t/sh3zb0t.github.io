@@ -1,0 +1,15 @@
+/* Navigation bar styles */
+.top-panel {
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 10px;
+    color: white;
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+}
+
+/* Navigation link styles */
+.top-panel a {
+    color: white;
+    text-decoration: none;
+    margin: 0 10px;
+}
