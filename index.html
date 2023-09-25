@@ -22,21 +22,8 @@
         <div class="content-box orange-border">
             <h1>Welcome to My Content Box</h1>
             <script src="https://cdn.jsdelivr.net/npm/ovenplayer@0.10.31/dist/ovenplayer.js"></script>
-            <div id="plajer"></div>
-            <script>
-                const player = OvenPlayer.create("plajer", {
-                    "autoStart": true,
-                    "autoFallback": true,
-                    "mute": false,
-                    "sources": [{
-                        "type": "webrtc",
-                        "file": "ws://streamserver.cipnet.cloud:3333/app/sh3zb0t"
-                    }, {
-                        "type": "webrtc",
-                        "file": "ws://streamserver.cipnet.cloud:3333/app/binguso"
-                    }]
-                    });
-            </script>
+            <div class="plajer" id="plajer"></div>
+            <script src=script.js></script>
         </div>
     </div>
 </body>
