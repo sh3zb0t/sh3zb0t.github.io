@@ -31,3 +31,7 @@ body {
     border: 0.3pc orange;
     border-style: solid inset solid inset;
 }
+.plajer {
+  width: 30vh; /* This sets the width to 50% of its parent container */
+  height: auto; /* This maintains the aspect ratio and adjusts the height accordingly */
+}
