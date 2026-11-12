@@ -1,0 +1,603 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Terraria Spin Wheels</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pixelify+Sans:wght@500;700&display=swap">
+<style>
+/* Layout: header with grass strip, a "Your run" summary panel, then an auto-fill grid of inventory-style wheel panels.
+   Blue inventory panels, torch-orange actions, one committed night-sky look (single theme by choice). */
+:root{
+  --night:#0d1230;
+  --panel:#25327a;
+  --panel-hi:#3646a3;
+  --slot:#161e55;
+  --edge:#080b24;
+  --text:#eef1ff;
+  --muted:#a8b2ea;
+  --torch:#f5a73b;
+  --torch-deep:#a8641a;
+  --torch-ink:#2a1700;
+  --grass:#58b34a;
+  --grass-2:#4a9f3d;
+  --dirt:#7a4a24;
+  --danger:#ff9a90;
+  --display:'Pixelify Sans',ui-monospace,Menlo,monospace;
+  --body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background-color:var(--night);
+  background-image:
+    radial-gradient(1.5px 1.5px at 24px 40px,rgba(255,255,255,.55),transparent),
+    radial-gradient(1px 1px at 110px 90px,rgba(255,255,255,.4),transparent),
+    radial-gradient(1px 1px at 70px 150px,rgba(255,255,255,.3),transparent);
+  background-size:180px 180px;
+  color:var(--text);
+  font:400 15px/1.45 var(--body);
+  padding-block:20px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.page{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+:focus-visible{outline:3px solid var(--torch);outline-offset:2px}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-end;justify-content:space-between}
+.top>div{min-width:0}
+h1{margin:0;font:700 clamp(28px,5.5vw,44px)/1.05 var(--display);letter-spacing:.01em;text-shadow:3px 3px 0 var(--edge);text-wrap:balance}
+.sub{margin:8px 0 0;color:var(--muted);max-width:52ch}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px}
+.grass{height:20px;margin-top:-4px;background:
+  linear-gradient(var(--grass) 0 10px,var(--dirt) 10px);
+  border:2px solid var(--edge);border-radius:2px;position:relative}
+.grass::after{content:"";position:absolute;inset:0 0 auto 0;height:10px;
+  background:repeating-linear-gradient(90deg,var(--grass-2) 0 16px,transparent 16px 32px)}
+
+/* buttons */
+.btn{font:600 14px/1 var(--body);min-height:40px;padding:0 14px;border:2px solid var(--edge);border-radius:4px;
+  background:var(--panel-hi);color:var(--text);cursor:pointer;box-shadow:0 3px 0 var(--edge);transition:transform .06s,filter .12s}
+.btn:hover:not(:disabled){filter:brightness(1.15)}
+.btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--torch);color:var(--torch-ink);box-shadow:0 3px 0 var(--torch-deep),0 0 0 0 var(--edge)}
+.btn.primary:active:not(:disabled){box-shadow:0 1px 0 var(--torch-deep)}
+.btn.ghost{background:transparent;box-shadow:none;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover:not(:disabled){background:var(--slot);color:var(--text);filter:none}
+.btn.ghost:active:not(:disabled){transform:none}
+.btn.sm{min-height:32px;padding:0 10px;font-size:13px}
+.btn.danger.confirm{color:var(--torch-ink);background:var(--danger)}
+.btn.danger:hover:not(:disabled){color:var(--danger)}
+.btn.sq{min-width:36px;padding:0}
+
+/* run summary */
+.run{background:var(--panel);border:2px solid var(--edge);border-radius:4px;
+  box-shadow:inset 0 0 0 2px var(--panel-hi),0 4px 0 var(--edge);padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.run-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+h2{margin:0;font:700 20px/1.2 var(--display);letter-spacing:.02em}
+.run-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+#status{color:var(--torch);font-size:13px;min-height:1em}
+.run-empty{margin:0;color:var(--muted)}
+.run-list{display:grid;grid-template-columns:minmax(90px,max-content) 1fr;gap:10px 16px;align-items:center}
+.run-k{font:600 12px/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);overflow-wrap:anywhere}
+.run-v{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
+#fallback{width:100%;min-height:90px;background:var(--slot);color:var(--text);border:2px solid var(--edge);border-radius:4px;padding:8px;font:13px/1.4 var(--body)}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;padding:6px 10px 6px 8px;background:var(--slot);
+  border:2px solid var(--edge);border-radius:3px;box-shadow:inset 0 0 0 1px var(--panel-hi);font-weight:600;overflow-wrap:anywhere}
+.chip i{flex:none;width:10px;height:10px;border-radius:1px;border:1px solid var(--edge)}
+
+/* wheels */
+.wheels{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:20px;align-items:start}
+.wheel{background:var(--panel);border:2px solid var(--edge);border-radius:4px;
+  box-shadow:inset 0 0 0 2px var(--panel-hi),0 4px 0 var(--edge);padding:14px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.wh{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;justify-content:space-between}
+.title{flex:1 1 140px;min-width:0;font:700 22px/1.2 var(--display);color:var(--text);background:transparent;border:0;border-bottom:2px dashed transparent;padding:4px 2px}
+.title:hover{border-bottom-color:var(--panel-hi)}
+.title:focus{outline:none;border-bottom-color:var(--torch)}
+.wh-actions{display:flex;gap:2px}
+.stage{position:relative;width:100%;max-width:320px;margin:6px auto 0}
+.stage canvas{display:block;width:100%;aspect-ratio:1;height:auto;cursor:pointer}
+.pointer{position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:0;height:0;
+  border-left:13px solid transparent;border-right:13px solid transparent;border-top:26px solid var(--torch);
+  filter:drop-shadow(0 2px 0 var(--edge)) drop-shadow(0 0 1px var(--edge));pointer-events:none}
+.controls{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.controls .primary{min-width:104px}
+.picks{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.picks output{min-width:2ch;text-align:center;color:var(--text);font-weight:700;font-variant-numeric:tabular-nums}
+.lock{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);cursor:pointer}
+.lock input{width:16px;height:16px;accent-color:var(--torch)}
+.result{display:flex;flex-wrap:wrap;gap:8px;min-height:40px;align-items:center}
+.result .hint{color:var(--muted);font-size:13px}
+.opts{border:0;margin:0;padding:12px 0 0;min-width:0;border-top:2px solid var(--edge);display:flex;flex-direction:column;gap:10px}
+.opts h3{margin:0;font:600 12px/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0}
+.optlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:248px;overflow-y:auto;padding-right:2px}
+.optlist li{display:flex;align-items:center;gap:6px}
+.sw{flex:none;width:10px;height:26px;border-radius:2px;border:1px solid var(--edge)}
+input.opt,input.add-in{flex:1;min-width:0;height:36px;padding:0 10px;background:var(--slot);color:var(--text);
+  border:2px solid var(--edge);border-radius:3px;font:500 14px var(--body)}
+input.opt:focus,input.add-in:focus{outline:none;border-color:var(--torch)}
+input.add-in::placeholder{color:var(--muted);opacity:.8}
+.addrow{display:flex;gap:8px}
+.opts:disabled .btn,.opts:disabled input{opacity:.55}
+.empty{border:2px dashed var(--panel-hi);border-radius:4px;padding:28px;text-align:center;color:var(--muted)}
+.dock{position:sticky;bottom:0;z-index:5;display:flex;justify-content:center;
+  padding:18px 0 max(14px,env(safe-area-inset-bottom,0px));
+  background:linear-gradient(rgba(13,18,48,0),var(--night) 45%)}
+.btn.big{min-height:54px;padding:0 28px;width:min(100%,440px);font:700 19px/1 var(--display);letter-spacing:.02em}
+.foot{color:var(--muted);font-size:13px;margin:0}
+@media (max-width:520px){
+  .toolbar{width:100%}
+  .toolbar .btn{flex:1 1 auto}
+  .run-list{grid-template-columns:1fr;gap:4px}
+  .run-k{margin-top:6px}
+}
+@media (prefers-reduced-motion:reduce){.btn{transition:none}}
+</style>
+
+<div class="page">
+  <header>
+    <div class="top">
+      <div>
+        <h1>Terraria Spin Wheels</h1>
+        <p class="sub">Spin for a class, a set of mods and a handicap. Add a wheel for anything else, then edit its options.</p>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="add-wheel" type="button">Add wheel</button>
+      </div>
+    </div>
+    <div class="grass" aria-hidden="true"></div>
+  </header>
+
+  <section class="run" aria-labelledby="run-h">
+    <div class="run-head">
+      <h2 id="run-h">Your run</h2>
+      <div class="run-actions">
+        <span id="status" role="status"></span>
+        <button class="btn sm" id="copy" type="button" disabled>Copy run</button>
+      </div>
+    </div>
+    <p class="run-empty" id="run-empty">Spin a wheel or hit Spin all. Results collect here so you can copy the whole run.</p>
+    <div class="run-list" id="run-list" hidden></div>
+    <textarea id="fallback" readonly hidden aria-label="Run text to copy"></textarea>
+  </section>
+
+  <main>
+    <div class="wheels" id="wheels"></div>
+    <div class="empty" id="empty" hidden>No wheels yet. Use Add wheel to make one, or reset to the starter set.</div>
+  </main>
+
+  <div class="dock">
+    <button class="btn primary big" id="spin-all" type="button">Spin all wheels</button>
+  </div>
+
+  <p class="foot">
+    Wheels save in this browser.
+    <button class="btn ghost sm danger" id="reset" type="button">Reset to starter wheels</button>
+  </p>
+</div>
+
+<script>
+(function(){
+  var STORE = 'terraria-spin-wheels-v1';
+  var TAU = Math.PI * 2;
+  var MAX_OPTS = 60;
+  var COLORS = ['#c4561f','#2f8a46','#2f66c4','#8e49b8','#9c7410','#b8324a','#1f8c92','#c2447a'];
+
+  var grid = document.getElementById('wheels');
+  var emptyEl = document.getElementById('empty');
+  var runList = document.getElementById('run-list');
+  var runEmpty = document.getElementById('run-empty');
+  var copyBtn = document.getElementById('copy');
+  var fallback = document.getElementById('fallback');
+  var statusEl = document.getElementById('status');
+  var spinAllBtn = document.getElementById('spin-all');
+  var resetBtn = document.getElementById('reset');
+
+  var wheels = [];
+  var seq = 0;
+
+  function mod(a, m){ return ((a % m) + m) % m; }
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  function reduced(){ return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  function byId(id){ return wheels.find(function(w){ return w.id === id; }); }
+  function colorFor(i, n){
+    var L = COLORS.length, k = i % L;
+    if (n > 1 && i === n - 1 && k === 0) k = Math.floor(L / 2);
+    return COLORS[k];
+  }
+
+  /* ---------- data ---------- */
+  function starter(){
+    return [
+      { title: 'Class', picks: 1, options: ['Melee','Ranger','Mage','Summoner','Rogue','Bard','Healer','Thrower'] },
+      { title: 'Mods', picks: 2, options: ['Calamity Mod','Thorium Mod',"Fargo's Souls",'Spirit Mod','Redemption','Stars Above','Secrets of the Shadows','Starlight River'] },
+      { title: 'Handicap', picks: 1, options: ['No armor','No healing potions','No grappling hook','No wings or mounts','Max 3 accessories','No buff potions','One life (Hardcore)','No recall or mirrors','Weapons from loot only'] }
+    ];
+  }
+  function make(d){
+    var opts = Array.isArray(d.options) ? d.options.map(String).filter(function(s){ return s.trim(); }).slice(0, MAX_OPTS) : [];
+    var picks = parseInt(d.picks, 10); if (!(picks >= 1)) picks = 1; if (picks > 12) picks = 12;
+    return {
+      id: 'w' + (++seq),
+      title: String(d.title == null ? 'Wheel' : d.title).slice(0, 60),
+      options: opts, picks: picks, locked: !!d.locked,
+      result: [], picked: new Set(), rot: Math.random() * TAU,
+      spinning: false, dead: false, ui: null
+    };
+  }
+  function save(){
+    try {
+      localStorage.setItem(STORE, JSON.stringify(wheels.map(function(w){
+        return { title: w.title, options: w.options, picks: w.picks, locked: w.locked };
+      })));
+    } catch (e) {}
+  }
+  function load(){
+    try {
+      var raw = localStorage.getItem(STORE);
+      if (!raw) return null;
+      var a = JSON.parse(raw);
+      return Array.isArray(a) ? a : null;
+    } catch (e) { return null; }
+  }
+
+  /* ---------- drawing ---------- */
+  function fit(ctx, text, max){
+    if (ctx.measureText(text).width <= max) return text;
+    while (text.length > 1 && ctx.measureText(text + '…').width > max) text = text.slice(0, -1);
+    return text.trimEnd() + '…';
+  }
+  function draw(w){
+    if (!w.ui || w.dead) return;
+    var c = w.ui.canvas;
+    var css = c.clientWidth || 300;
+    var dpr = window.devicePixelRatio || 1;
+    var px = Math.round(css * dpr);
+    if (c.width !== px){ c.width = px; c.height = px; }
+    var ctx = c.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, css, css);
+    var R = css / 2 - 6, n = w.options.length;
+    ctx.save();
+    ctx.translate(css / 2, css / 2);
+    ctx.beginPath(); ctx.arc(0, 0, R + 4, 0, TAU); ctx.fillStyle = '#080b24'; ctx.fill();
+    if (n === 0){
+      ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fillStyle = '#161e55'; ctx.fill();
+      ctx.fillStyle = '#a8b2ea'; ctx.font = '600 15px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('Add options below', 0, 0);
+      ctx.restore(); return;
+    }
+    ctx.rotate(w.rot);
+    var a = TAU / n;
+    var fs = Math.max(8, Math.min(15, 0.7 * R * a * 0.55));
+    for (var i = 0; i < n; i++){
+      var s = -Math.PI / 2 + i * a;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R, s, s + a); ctx.closePath();
+      ctx.fillStyle = colorFor(i, n); ctx.fill();
+      if (w.picked.has(i)){ ctx.fillStyle = 'rgba(8,11,36,.62)'; ctx.fill(); }
+      ctx.lineWidth = 2; ctx.strokeStyle = '#080b24'; ctx.stroke();
+      ctx.save();
+      ctx.rotate(s + a / 2);
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.font = '700 ' + fs + 'px Inter, system-ui, sans-serif';
+      var label = fit(ctx, w.options[i] || '…', R * 0.72);
+      ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(8,11,36,.55)';
+      ctx.strokeText(label, R - 20, 0);
+      ctx.fillStyle = w.picked.has(i) ? 'rgba(238,241,255,.6)' : '#fff';
+      ctx.fillText(label, R - 20, 0);
+      ctx.restore();
+    }
+    ctx.rotate(-w.rot);
+    ctx.beginPath(); ctx.arc(0, 0, Math.max(9, R * 0.1), 0, TAU);
+    ctx.fillStyle = '#f5a73b'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#080b24'; ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ---------- card ui ---------- */
+  function buildCard(w){
+    var el = document.createElement('article');
+    el.className = 'wheel';
+    el.dataset.id = w.id;
+    el.innerHTML =
+      '<div class="wh">' +
+        '<input class="title" id="title-' + w.id + '" aria-label="Wheel name" maxlength="60">' +
+        '<div class="wh-actions">' +
+          '<button class="btn ghost sm" type="button" data-act="dup">Duplicate</button>' +
+          '<button class="btn ghost sm danger" type="button" data-act="del">Remove</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="stage"><canvas data-act="spin" title="Click to spin" aria-label="Wheel"></canvas><div class="pointer" aria-hidden="true"></div></div>' +
+      '<div class="controls">' +
+        '<button class="btn primary" type="button" data-act="spin">Spin</button>' +
+        '<span class="picks">Picks ' +
+          '<button class="btn sm sq" type="button" data-act="pm" aria-label="Fewer picks">−</button>' +
+          '<output aria-live="polite"></output>' +
+          '<button class="btn sm sq" type="button" data-act="pp" aria-label="More picks">+</button>' +
+        '</span>' +
+        '<label class="lock" for="lock-' + w.id + '"><input type="checkbox" class="lock-cb" id="lock-' + w.id + '"> Skip in Spin all</label>' +
+      '</div>' +
+      '<div class="result" aria-live="polite"></div>' +
+      '<fieldset class="opts">' +
+        '<h3>Options (<span class="count"></span>)</h3>' +
+        '<ul class="optlist"></ul>' +
+        '<div class="addrow">' +
+          '<input class="add-in" id="add-' + w.id + '" placeholder="Add option, or paste a list" maxlength="60" aria-label="New option">' +
+          '<button class="btn sm" type="button" data-act="add">Add</button>' +
+        '</div>' +
+      '</fieldset>';
+    var q = function(s){ return el.querySelector(s); };
+    w.ui = {
+      el: el, canvas: q('canvas'), title: q('.title'), result: q('.result'), list: q('.optlist'),
+      count: q('.count'), addIn: q('.add-in'), spinBtn: q('.controls .primary'),
+      picksOut: q('.picks output'), pm: q('[data-act="pm"]'), pp: q('[data-act="pp"]'),
+      lock: q('.lock-cb'), opts: q('.opts')
+    };
+    w.ui.title.value = w.title;
+    w.ui.lock.checked = w.locked;
+    renderOptions(w);
+    renderPicks(w);
+    renderResult(w, true);
+    if (window.ResizeObserver){
+      new ResizeObserver(function(){ draw(w); }).observe(w.ui.canvas);
+    }
+    return el;
+  }
+  function renderOptions(w){
+    var ul = w.ui.list, n = w.options.length;
+    ul.textContent = '';
+    w.options.forEach(function(t, i){
+      var li = document.createElement('li'); li.dataset.i = i;
+      var sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = colorFor(i, n);
+      var inp = document.createElement('input'); inp.className = 'opt'; inp.value = t; inp.maxLength = 60;
+      inp.id = w.id + '-opt-' + i; inp.setAttribute('aria-label', 'Option ' + (i + 1));
+      var x = document.createElement('button'); x.type = 'button'; x.className = 'btn ghost sm sq'; x.dataset.act = 'rm';
+      x.setAttribute('aria-label', 'Remove option ' + (i + 1)); x.textContent = '×';
+      li.appendChild(sw); li.appendChild(inp); li.appendChild(x);
+      ul.appendChild(li);
+    });
+    w.ui.count.textContent = n;
+    setSpinUI(w);
+  }
+  function renderPicks(w){
+    w.ui.picksOut.textContent = w.picks;
+    w.ui.pm.disabled = w.spinning || w.picks <= 1;
+    w.ui.pp.disabled = w.spinning || w.picks >= 12;
+  }
+  function setSpinUI(w){
+    if (!w.ui) return;
+    w.ui.spinBtn.disabled = w.spinning || w.options.length === 0;
+    w.ui.spinBtn.textContent = w.spinning ? 'Spinning…' : 'Spin';
+    w.ui.opts.disabled = w.spinning;
+    renderPicks(w);
+    busy();
+  }
+  function chip(r){
+    var s = document.createElement('span'); s.className = 'chip';
+    var i = document.createElement('i'); i.style.background = r.color;
+    s.appendChild(i); s.appendChild(document.createTextNode(r.text));
+    return s;
+  }
+  function renderResult(w, quiet){
+    var box = w.ui.result; box.textContent = '';
+    if (!w.result.length){
+      var h = document.createElement('span'); h.className = 'hint'; h.textContent = 'Spin to pick';
+      box.appendChild(h);
+    } else {
+      w.result.forEach(function(r){ box.appendChild(chip(r)); });
+    }
+    if (!quiet) renderSummary();
+  }
+
+  /* ---------- summary ---------- */
+  function runText(){
+    return wheels.filter(function(w){ return w.result.length; }).map(function(w){
+      return (w.title || 'Untitled') + ': ' + w.result.map(function(r){ return r.text; }).join(', ');
+    }).join('\n');
+  }
+  function renderSummary(){
+    var done = wheels.filter(function(w){ return w.result.length; });
+    runList.textContent = '';
+    runList.hidden = !done.length;
+    runEmpty.hidden = !!done.length;
+    copyBtn.disabled = !done.length;
+    done.forEach(function(w){
+      var k = document.createElement('div'); k.className = 'run-k'; k.textContent = w.title || 'Untitled';
+      var v = document.createElement('div'); v.className = 'run-v';
+      w.result.forEach(function(r){ v.appendChild(chip(r)); });
+      runList.appendChild(k); runList.appendChild(v);
+    });
+  }
+  var statusTimer;
+  function say(msg){
+    statusEl.textContent = msg;
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(function(){ statusEl.textContent = ''; }, 2800);
+  }
+  copyBtn.addEventListener('click', function(){
+    var t = runText(); if (!t) return;
+    var done = function(){ fallback.hidden = true; say('Copied'); };
+    var fail = function(){ fallback.hidden = false; fallback.value = t; fallback.focus(); fallback.select(); say('Press Ctrl+C to copy'); };
+    try {
+      navigator.clipboard.writeText(t).then(done, fail);
+    } catch (e) { fail(); }
+  });
+
+  /* ---------- spinning ---------- */
+  function animateTo(w, target, dur){
+    return new Promise(function(res){
+      var from = w.rot, t0 = performance.now();
+      function step(now){
+        if (w.dead) return res();
+        var t = Math.min(1, (now - t0) / dur);
+        w.rot = from + (target - from) * (1 - Math.pow(1 - t, 4));
+        draw(w);
+        if (t < 1) requestAnimationFrame(step); else res();
+      }
+      requestAnimationFrame(step);
+    });
+  }
+  function busy(){
+    var any = wheels.some(function(w){ return w.spinning; });
+    var n = wheels.filter(function(w){ return !w.locked && w.options.length; }).length;
+    spinAllBtn.disabled = any || n === 0;
+    spinAllBtn.textContent = any ? 'Spinning…' : 'Spin all wheels' + (n ? ' (' + n + ')' : '');
+  }
+  async function spinWheel(w){
+    if (w.spinning || w.dead || !w.options.length) return;
+    w.spinning = true; w.result = []; w.picked = new Set();
+    setSpinUI(w); renderResult(w); busy(); draw(w);
+    var total = Math.min(w.picks, w.options.length);
+    for (var k = 0; k < total; k++){
+      if (w.dead) return;
+      var n = w.options.length, pool = [];
+      for (var i = 0; i < n; i++) if (!w.picked.has(i)) pool.push(i);
+      if (!pool.length) break;
+      var idx = pool[Math.floor(Math.random() * pool.length)];
+      var a = TAU / n;
+      var jitter = (Math.random() - 0.5) * a * 0.7;
+      var want = mod(-((idx + 0.5) * a + jitter), TAU);
+      var delta = mod(want - mod(w.rot, TAU), TAU);
+      var rm = reduced();
+      var extra = rm ? 0 : (k === 0 ? 5 : 3) + Math.floor(Math.random() * 2);
+      var dur = rm ? 450 : (k === 0 ? 4200 : 2600) + Math.random() * 600;
+      await animateTo(w, w.rot + delta + extra * TAU, dur);
+      if (w.dead) return;
+      w.rot = mod(w.rot, TAU);
+      w.picked.add(idx);
+      w.result.push({ text: w.options[idx] || '…', color: colorFor(idx, n) });
+      renderResult(w); draw(w);
+      if (k < total - 1) await sleep(rm ? 200 : 500);
+    }
+    w.spinning = false; setSpinUI(w); busy();
+  }
+  function spinAll(){
+    var list = wheels.filter(function(w){ return !w.locked && !w.spinning && w.options.length; });
+    if (!list.length){ say('No wheels to spin'); return; }
+    spinAllBtn.disabled = true;
+    list.forEach(function(w, i){ sleep(i * 220).then(function(){ spinWheel(w); }); });
+  }
+  spinAllBtn.addEventListener('click', spinAll);
+
+  /* ---------- wheel management ---------- */
+  function updateEmpty(){ emptyEl.hidden = wheels.length > 0; }
+  function mount(w, after){
+    var el = buildCard(w);
+    if (after && after.ui) after.ui.el.after(el); else grid.appendChild(el);
+    draw(w);
+  }
+  function addWheel(){
+    var w = make({ title: 'New wheel', picks: 1, options: ['Option A','Option B','Option C'] });
+    wheels.push(w); mount(w); save(); updateEmpty(); renderSummary();
+    w.ui.el.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'center' });
+    w.ui.title.focus(); w.ui.title.select();
+  }
+  function dupWheel(w){
+    var c = make({ title: (w.title + ' copy').slice(0, 60), picks: w.picks, locked: w.locked, options: w.options.slice() });
+    wheels.splice(wheels.indexOf(w) + 1, 0, c);
+    mount(c, w); save(); updateEmpty();
+    c.ui.title.focus(); c.ui.title.select();
+  }
+  function delWheel(w){
+    w.dead = true;
+    w.ui.el.remove();
+    wheels.splice(wheels.indexOf(w), 1);
+    save(); updateEmpty(); renderSummary(); busy();
+  }
+  function addOptions(w, lines){
+    var added = false;
+    lines.forEach(function(l){
+      l = l.trim().slice(0, 60);
+      if (l && w.options.length < MAX_OPTS){ w.options.push(l); added = true; }
+    });
+    if (!added) return;
+    w.picked = new Set();
+    renderOptions(w); draw(w); save();
+  }
+  function addFromInput(w){
+    var v = w.ui.addIn.value;
+    if (!v.trim()) { w.ui.addIn.focus(); return; }
+    addOptions(w, v.split(/\r?\n/));
+    w.ui.addIn.value = '';
+    w.ui.addIn.focus();
+  }
+
+  /* ---------- events ---------- */
+  grid.addEventListener('click', function(e){
+    var b = e.target.closest('[data-act]'); if (!b) return;
+    var card = b.closest('.wheel'); var w = card && byId(card.dataset.id); if (!w) return;
+    var act = b.dataset.act;
+    if (act === 'spin') spinWheel(w);
+    else if (act === 'dup') dupWheel(w);
+    else if (act === 'del') delWheel(w);
+    else if (act === 'pm'){ if (w.picks > 1){ w.picks--; renderPicks(w); save(); } }
+    else if (act === 'pp'){ if (w.picks < 12){ w.picks++; renderPicks(w); save(); } }
+    else if (act === 'add') addFromInput(w);
+    else if (act === 'rm'){
+      var i = +b.closest('li').dataset.i;
+      w.options.splice(i, 1); w.picked = new Set();
+      renderOptions(w); draw(w); save();
+    }
+  });
+  grid.addEventListener('input', function(e){
+    var t = e.target, card = t.closest('.wheel'); var w = card && byId(card.dataset.id); if (!w) return;
+    if (t.classList.contains('title')){ w.title = t.value; save(); renderSummary(); }
+    else if (t.classList.contains('opt')){
+      w.options[+t.closest('li').dataset.i] = t.value; draw(w); save();
+    }
+  });
+  grid.addEventListener('change', function(e){
+    var t = e.target, card = t.closest('.wheel'); var w = card && byId(card.dataset.id); if (!w) return;
+    if (t.classList.contains('lock-cb')){ w.locked = t.checked; save(); busy(); }
+    else if (t.classList.contains('opt') && !t.value.trim()){
+      w.options.splice(+t.closest('li').dataset.i, 1); w.picked = new Set();
+      renderOptions(w); draw(w); save();
+    }
+  });
+  grid.addEventListener('keydown', function(e){
+    var t = e.target;
+    if (t.classList.contains('add-in') && e.key === 'Enter'){
+      e.preventDefault();
+      var card = t.closest('.wheel'); var w = card && byId(card.dataset.id); if (w) addFromInput(w);
+    }
+  });
+  grid.addEventListener('paste', function(e){
+    var t = e.target;
+    if (!t.classList || !t.classList.contains('add-in')) return;
+    var text = (e.clipboardData && e.clipboardData.getData('text')) || '';
+    if (text.indexOf('\n') === -1) return;
+    e.preventDefault();
+    var card = t.closest('.wheel'); var w = card && byId(card.dataset.id);
+    if (w) addOptions(w, text.split(/\r?\n/));
+  });
+
+  document.getElementById('add-wheel').addEventListener('click', addWheel);
+
+  var resetTimer;
+  resetBtn.addEventListener('click', function(){
+    if (!resetBtn.classList.contains('confirm')){
+      resetBtn.classList.add('confirm'); resetBtn.textContent = 'Click again to replace all wheels';
+      resetTimer = setTimeout(function(){ resetBtn.classList.remove('confirm'); resetBtn.textContent = 'Reset to starter wheels'; }, 3500);
+      return;
+    }
+    clearTimeout(resetTimer);
+    resetBtn.classList.remove('confirm'); resetBtn.textContent = 'Reset to starter wheels';
+    wheels.forEach(function(w){ w.dead = true; });
+    grid.textContent = '';
+    wheels = starter().map(make);
+    wheels.forEach(function(w){ mount(w); });
+    save(); updateEmpty(); renderSummary(); busy();
+  });
+
+  /* ---------- boot ---------- */
+  wheels = (load() || starter()).map(make);
+  wheels.forEach(function(w){ mount(w); });
+  updateEmpty(); renderSummary(); busy();
+  if (document.fonts && document.fonts.ready){
+    document.fonts.ready.then(function(){ wheels.forEach(draw); });
+  }
+})();
+</script>
+
+</body></html>
