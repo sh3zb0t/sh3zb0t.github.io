@@ -1,4 +1,4 @@
-# terraspin.github.io
+# terraspin, spin for your runs
 a claude slop spinning wheels website to spin for your runs on terraria
 
 no copyright cause shits made by ai
