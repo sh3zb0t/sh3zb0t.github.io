@@ -177,7 +177,9 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
 .switch:has(input:checked){color:var(--text)}
 .dgroup{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px 10px;align-items:end;padding:10px;
   background:var(--slot);border:2px solid var(--edge);border-radius:3px;box-shadow:inset 0 0 0 1px var(--panel-hi)}
-.dgroup .op{grid-column:1/-1}
+.dgroup .op,.dgroup .rp{grid-column:1/-1}
+.linkbox{display:flex;flex-direction:column;gap:10px;padding:10px;background:var(--slot);border:2px solid var(--edge);border-radius:3px;box-shadow:inset 0 0 0 1px var(--panel-hi)}
+.linkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px}
 .dlg{padding:0;border:2px solid var(--edge);border-radius:4px;background:var(--panel);color:var(--text);
   width:min(720px,calc(100% - 32px));max-height:calc(100% - 32px);overflow:auto;box-shadow:inset 0 0 0 2px var(--panel-hi),0 8px 0 var(--edge)}
 .dlg::backdrop{background:rgba(8,11,36,.8)}
@@ -196,6 +198,7 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
   .dgroup .rm{grid-column:2;grid-row:1}
   .dgroup .nd{grid-column:1/-1;grid-row:2}
   .dgroup .op{grid-column:1/-1;grid-row:3}
+  .dgroup .rp{grid-column:1/-1;grid-row:4}
 }
 .foot{color:var(--muted);font-size:13px;margin:0}
 @media (max-width:520px){
@@ -228,6 +231,7 @@ html,body{margin:0}
       <h2 id="run-h">Your run</h2>
       <div class="run-actions">
         <span id="status" role="status"></span>
+        <label class="switch" for="std-on"><input type="checkbox" id="std-on" checked><span class="track" aria-hidden="true"></span><span>Difficulty roll</span></label>
         <label class="switch" for="diff-on"><input type="checkbox" id="diff-on" checked><span class="track" aria-hidden="true"></span><span>Mod difficulty roll</span></label>
         <button class="btn sm" id="copy" type="button" disabled>Copy run</button>
       </div>
@@ -242,7 +246,7 @@ html,body{margin:0}
     <div class="empty" id="empty" hidden>No wheels yet. Use Add wheel to make one, or reset to the starter set.</div>
   </main>
 
-  <details class="rules-panel" open>
+  <details class="rules-panel">
     <summary>Mod rules</summary>
     <div class="rules-body">
       <p class="rules-help">When every comma-separated item in "If rolled" has been rolled on any wheel, the mods in "Add mods" join your run. Use | for "or", so <b>Bard | Healer, Calamity Mod</b> means (Bard or Healer) and Calamity Mod. Names must match an option exactly (capitals don't matter). Mods added by one rule count as rolled for the others. Tick "Always required" for mods a class can't run without; the cancel list leaves those in place and only waives the rest as compat mods.</p>
@@ -256,11 +260,21 @@ html,body{margin:0}
   </details>
 
   <details class="rules-panel" id="diff-panel">
-    <summary>Mod difficulties</summary>
+    <summary>Difficulty wheels</summary>
     <div class="rules-body">
-      <p class="rules-help">Each wheel here joins the difficulty window, which opens after Spin all while "Mod difficulty roll" is on in Your run. A wheel only appears when its mod is in the run, either rolled or added by a rule. Leave the mod field blank to always include the wheel.</p>
+      <p class="rules-help">These wheels spin in the difficulty window, which opens after Spin all. A wheel with no mod set is a standard difficulty and follows the "Difficulty roll" switch. A wheel with a mod set only appears when that mod is in the run, whether it was rolled or added by a rule, and follows the "Mod difficulty roll" switch. List several mods with commas to need all of them. A wheel can name other wheels in "Replaces" to take their place while it appears.</p>
       <ul class="rule-list" id="diff-list"></ul>
       <div><button class="btn sm" id="add-diff" type="button">Add difficulty wheel</button></div>
+      <div class="linkbox">
+        <label class="lock" for="link-on"><input type="checkbox" id="link-on" checked> Link standard and mod difficulties</label>
+        <div class="linkgrid">
+          <div class="rf"><label for="link-top">Top mod difficulties</label><input class="r-in" id="link-top" maxlength="120"></div>
+          <div class="rf"><label for="link-std">Top standard difficulty</label><input class="r-in" id="link-std" maxlength="60"></div>
+          <div class="rf"><label for="link-neutral">Normal option</label><input class="r-in" id="link-neutral" maxlength="60"></div>
+          <div class="rf"><label for="link-both">Always set on combined wheels</label><input class="r-in" id="link-both" maxlength="120"></div>
+        </div>
+        <p class="rules-help">Rolling a top mod difficulty sets the standard difficulty to its top option. Rolling the top standard difficulty sets every mod difficulty that is not normal to its own top option. On a combined wheel (one that needs several mods, such as Calamity and Fargo together) the top standard difficulty also always sets the options listed under "Always set on combined wheels", even when the roll was Normal, so Legendary gives Masochist. Forced results are marked "set by" in the window and in Your run.</p>
+      </div>
     </div>
   </details>
 
@@ -277,7 +291,7 @@ html,body{margin:0}
 <dialog class="dlg" id="diff-dlg" aria-labelledby="diff-title">
   <div class="dlg-body">
     <div class="dlg-head">
-      <h2 id="diff-title">Mod difficulty roll</h2>
+      <h2 id="diff-title">Difficulty roll</h2>
       <button class="btn ghost sm" id="diff-close" type="button">Close</button>
     </div>
     <p class="dlg-sub" id="diff-sub"></p>
@@ -311,6 +325,8 @@ html,body{margin:0}
   var cancel = [];
   var diffs = [];
   var diffOn = true;
+  var stdOn = true;
+  var links = starterLinks();
   var diffResult = null;
   var seq = 0;
 
@@ -329,7 +345,6 @@ html,body{margin:0}
     return [
       { title: 'Class', picks: 1, options: ['Melee','Ranger','Mage','Summoner','Rogue','Bard','Healer','Thrower'] },
       { title: 'Mods', picks: 2, options: ['Calamity Mod','Thorium Mod',"Fargo's Souls",'Spirit Mod','Redemption','Stars Above','Secrets of the Shadows','Starlight River'] },
-      { title: 'Difficulty', picks: 1, options: ['Expert','Master','Legendary'] },
       { title: 'Handicap', picks: 1, options: ['No armor','No healing potions','No grappling hook','No wings or mounts','Max 3 accessories','No buff potions','One life (Hardcore)','No recall or mirrors','Weapons from loot only','No magic storage','Autopause always off','No compat mods'] }
     ];
   }
@@ -340,10 +355,43 @@ html,body{margin:0}
       { if: ['Rogue'], add: ['Calamity Mod'], hard: true },
       { if: ['Bard | Healer','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer Compat'], hard: false },
       { if: ['Bard | Healer',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer Compat'], hard: false },
-      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false }
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Calamity Mod',"Fargo's Souls"], add: ["Fargo's Souls DLC"], hard: false }
     ];
   }
+  function starterModDiffs(){
+    return [
+      { name: 'Calamity difficulty', needs: 'Calamity Mod', options: ['Normal','Revengeance','Death','Malice'], replaces: [] },
+      { name: "Fargo's Souls difficulty", needs: "Fargo's Souls", options: ['Normal','Eternity','Masochist'], replaces: [] },
+      { name: 'Calamity + Fargo difficulty', needs: "Calamity Mod, Fargo's Souls",
+        options: ['Normal','Revengeance','Death','Malice','Eternity','Masochist',
+          'Revengeance + Eternity','Revengeance + Masochist','Death + Eternity','Death + Masochist','Malice + Eternity','Malice + Masochist'],
+        replaces: ['Calamity difficulty', "Fargo's Souls difficulty"] }
+    ];
+  }
+  /* the mod wheels from before "Normal" was added, so unedited copies upgrade */
+  function previousModDiffs2(){
+    return [
+      { name: 'Calamity difficulty', needs: 'Calamity Mod', options: ['Revengeance','Death','Malice'], replaces: [] },
+      { name: "Fargo's Souls difficulty", needs: "Fargo's Souls", options: ['Eternity','Masochist'], replaces: [] },
+      { name: 'Calamity + Fargo difficulty', needs: "Calamity Mod, Fargo's Souls",
+        options: ['Revengeance + Eternity','Revengeance + Masochist','Death + Eternity','Death + Masochist','Malice + Eternity','Malice + Masochist'],
+        replaces: ['Calamity difficulty', "Fargo's Souls difficulty"] }
+    ];
+  }
+  function starterLinks(){ return { on: true, std: 'Legendary', top: ['Malice','Masochist'], neutral: 'Normal', both: ['Masochist'] }; }
+  function cleanLinks(o){
+    var d = starterLinks();
+    o = o || {};
+    return { on: o.on !== false, std: String(o.std || d.std).trim().slice(0, 60),
+      top: Array.isArray(o.top) ? cleanList(o.top) : d.top, neutral: String(o.neutral || d.neutral).trim().slice(0, 60),
+      both: Array.isArray(o.both) ? cleanList(o.both) : d.both };
+  }
+  /* A group with no mod is a standard difficulty (switch: Difficulty roll); a group with a mod is a mod difficulty (switch: Mod difficulty roll). */
   function starterDiffs(){
+    return [{ name: 'Difficulty', needs: '', options: ['Expert','Master','Legendary'], replaces: [] }].concat(starterModDiffs());
+  }
+  function previousModDiffs(){
     return [
       { name: 'Calamity difficulty', needs: 'Calamity Mod', options: ['Revengeance','Death','Malice'] },
       { name: "Fargo's Souls difficulty", needs: "Fargo's Souls", options: ['Eternity','Masochist'] }
@@ -351,24 +399,33 @@ html,body{margin:0}
   }
   function cleanDiffs(a){
     return Array.isArray(a) ? a.slice(0, 12).map(function(g){
-      return { name: String((g && g.name) || 'Difficulty').slice(0, 60), needs: String((g && g.needs) || '').slice(0, 60), options: cleanList(g && g.options) };
+      return { name: String((g && g.name) || 'Difficulty').slice(0, 60), needs: String((g && g.needs) || '').slice(0, 120),
+        options: cleanList(g && g.options), replaces: cleanList(g && g.replaces) };
     }) : [];
   }
-  /* One-time upgrades for saved wheels: an unedited Handicap list gains the new standard handicaps,
-     and saves from before the Difficulty wheel existed get one (before Handicap). */
-  function upgradeWheels(ws, v){
-    var prevHandicap = ['No armor','No healing potions','No grappling hook','No wings or mounts','Max 3 accessories','No buff potions','One life (Hardcore)','No recall or mirrors','Weapons from loot only','No compat mods'];
+  /* every comma-separated item must be present; "|" inside an item means "or"; blank means always */
+  function needsMet(needs, present){
+    return parseList(needs).every(function(t){ return !!termHit(t, present); });
+  }
+  /* An unedited Handicap list gains the newer standard handicaps. */
+  function upgradeWheels(ws){
+    var prev = ['No armor','No healing potions','No grappling hook','No wings or mounts','Max 3 accessories','No buff potions','One life (Hardcore)','No recall or mirrors','Weapons from loot only','No compat mods'];
     ws.forEach(function(w){
-      if (w && w.title === 'Handicap' && Array.isArray(w.options) && JSON.stringify(w.options) === JSON.stringify(prevHandicap)){
+      if (w && w.title === 'Handicap' && Array.isArray(w.options) && JSON.stringify(w.options) === JSON.stringify(prev)){
         w.options = w.options.slice(0, -1).concat(['No magic storage','Autopause always off','No compat mods']);
       }
     });
-    if (v < 3 && !ws.some(function(w){ return w && w.title === 'Difficulty'; })){
-      var d = { title: 'Difficulty', picks: 1, options: ['Expert','Master','Legendary'] };
-      var hi = ws.findIndex(function(w){ return w && w.title === 'Handicap'; });
-      if (hi < 0) ws.push(d); else ws.splice(hi, 0, d);
-    }
     return ws;
+  }
+  /* Older saves had Difficulty as a normal wheel. Take it out of the list and return its options for the difficulty window. */
+  function pullDifficulty(ws){
+    var i = ws.findIndex(function(w){ return w && w.title === 'Difficulty'; });
+    if (i < 0) return null;
+    var opts = (Array.isArray(ws[i].options) ? ws[i].options : []).map(function(o){
+      return String(o && typeof o === 'object' ? o.t : o).trim();
+    }).filter(Boolean).slice(0, 12);
+    ws.splice(i, 1);
+    return opts;
   }
   /* the previous starter set, so an unedited saved copy upgrades to the current one */
   function previousStarterRules(){
@@ -380,11 +437,22 @@ html,body{margin:0}
       { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'] }
     ];
   }
-  function migrateRules(rs){
-    return JSON.stringify(rs) === JSON.stringify(cleanRules(previousStarterRules())) ? starterRules() : rs;
+  function previousStarterRules2(){
+    return [
+      { if: ['Bard | Healer | Thrower'], add: ['Thorium Mod'], hard: true },
+      { if: ['Rogue'], add: ['Calamity Mod'], hard: true },
+      { if: ['Bard | Healer','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer Compat'], hard: false },
+      { if: ['Bard | Healer',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer Compat'], hard: false },
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false }
+    ];
   }
-  function parseList(v){ return String(v).split(',').map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 12); }
-  function cleanList(a){ return Array.isArray(a) ? a.map(function(x){ return String(x).trim().slice(0, 60); }).filter(Boolean).slice(0, 12) : []; }
+  function migrateRules(rs){
+    var s = JSON.stringify(rs);
+    var old = [previousStarterRules(), previousStarterRules2()].some(function(p){ return JSON.stringify(cleanRules(p)) === s; });
+    return old ? starterRules() : rs;
+  }
+  function parseList(v){ return String(v).split(',').map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 24); }
+  function cleanList(a){ return Array.isArray(a) ? a.map(function(x){ return String(x).trim().slice(0, 60); }).filter(Boolean).slice(0, 24) : []; }
   function cleanRules(a){
     return Array.isArray(a) ? a.slice(0, 40).map(function(r){
       return { if: cleanList(r && r.if), add: cleanList(r && r.add), hard: !!(r && r.hard) };
@@ -407,11 +475,11 @@ html,body{margin:0}
   function save(){
     try {
       localStorage.setItem(STORE, JSON.stringify({
-        v: 3,
+        v: 4,
         wheels: wheels.map(function(w){
           return { title: w.title, options: w.options.map(function(o){ return o.t; }), picks: w.picks, locked: w.locked };
         }),
-        rules: rules, cancel: cancel, diffs: diffs, diffOn: diffOn
+        rules: rules, cancel: cancel, diffs: diffs, diffOn: diffOn, stdOn: stdOn, links: links
       }));
     } catch (e) {}
     markRules();
@@ -420,19 +488,17 @@ html,body{margin:0}
     try {
       var raw = localStorage.getItem(STORE);
       if (!raw) return null;
-      var a = JSON.parse(raw);
+      var a = JSON.parse(raw), v, ws, rs, cn, ds = null, on = true, std = true, lk = starterLinks();
       if (a && Array.isArray(a.wheels)){
-        return {
-          wheels: upgradeWheels(a.wheels, a.v || 2),
-          rules: Array.isArray(a.rules) ? migrateRules(cleanRules(a.rules)) : starterRules(),
-          cancel: Array.isArray(a.cancel) ? cleanList(a.cancel) : ['No compat mods'],
-          diffs: Array.isArray(a.diffs) ? cleanDiffs(a.diffs) : starterDiffs(),
-          diffOn: a.diffOn !== false
-        };
-      }
-      if (Array.isArray(a)){
+        v = a.v || 2; ws = a.wheels;
+        rs = Array.isArray(a.rules) ? migrateRules(cleanRules(a.rules)) : starterRules();
+        cn = Array.isArray(a.cancel) ? cleanList(a.cancel) : ['No compat mods'];
+        ds = Array.isArray(a.diffs) ? cleanDiffs(a.diffs) : null;
+        on = a.diffOn !== false; std = a.stdOn !== false;
+        if (a.links) lk = cleanLinks(a.links);
+      } else if (Array.isArray(a)){
         /* older saves held only wheels; per-option requirements become rules */
-        var rs = [], cn = [];
+        v = 1; ws = a; rs = []; cn = [];
         a.forEach(function(w){
           (w && Array.isArray(w.options) ? w.options : []).forEach(function(o){
             if (o && typeof o === 'object'){
@@ -441,15 +507,23 @@ html,body{margin:0}
             }
           });
         });
-        return {
-          wheels: upgradeWheels(a, 1),
-          rules: rs.length ? cleanRules(rs) : starterRules(),
-          cancel: cn.length ? cleanList(cn) : ['No compat mods'],
-          diffs: starterDiffs(),
-          diffOn: true
-        };
+        rs = rs.length ? cleanRules(rs) : starterRules();
+        cn = cn.length ? cleanList(cn) : ['No compat mods'];
+      } else return null;
+      upgradeWheels(ws);
+      var stdOpts = v < 4 ? pullDifficulty(ws) : null;
+      if (!ds) ds = starterDiffs();
+      /* unedited Calamity and Fargo wheels upgrade to the set that includes the combined wheel */
+      var modG = ds.filter(function(g){ return g.needs.trim(); });
+      if ([previousModDiffs(), previousModDiffs2()].some(function(p){ return JSON.stringify(modG) === JSON.stringify(cleanDiffs(p)); })){
+        ds = ds.filter(function(g){ return !g.needs.trim(); }).concat(starterModDiffs());
       }
-      return null;
+      if (v < 4){
+        var sg = ds.filter(function(g){ return !g.needs.trim(); })[0];
+        if (!sg){ sg = { name: 'Difficulty', needs: '', options: ['Expert','Master','Legendary'], replaces: [] }; ds.unshift(sg); }
+        if (stdOpts && stdOpts.length) sg.options = stdOpts;
+      }
+      return { wheels: ws, rules: rs, cancel: cn, diffs: ds, diffOn: on, stdOn: std, links: lk };
     } catch (e) { return null; }
   }
 
@@ -458,6 +532,16 @@ html,body{margin:0}
     if (ctx.measureText(text).width <= max) return text;
     while (text.length > 1 && ctx.measureText(text + '…').width > max) text = text.slice(0, -1);
     return text.trimEnd() + '…';
+  }
+  /* split a label at the space that gives the most even halves */
+  function splitTwo(t){
+    var best = -1, bestDiff = 1e9;
+    for (var i = 1; i < t.length - 1; i++){
+      if (t[i] !== ' ') continue;
+      var d = Math.abs(i - (t.length - i - 1));
+      if (d < bestDiff){ bestDiff = d; best = i; }
+    }
+    return best < 0 ? null : [t.slice(0, best), t.slice(best + 1)];
   }
   function draw(w){
     if (!w.ui || w.dead) return;
@@ -493,13 +577,24 @@ html,body{margin:0}
       ctx.rotate(s + a / 2);
       ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
       ctx.font = '700 ' + fs + 'px Inter, system-ui, sans-serif';
-      var raw = w.options[i].t || '…', maxW = R * 0.72, f = fs;
-      while (f > 10 && ctx.measureText(raw).width > maxW){ f -= 1; ctx.font = '700 ' + f + 'px Inter, system-ui, sans-serif'; }
-      var label = fit(ctx, raw, maxW);
+      /* shrink long labels, then split onto two lines at a space, and only truncate as a last resort */
+      var raw = w.options[i].t || '…', maxW = R * 0.72, f = fs, lines;
+      for (;;){
+        ctx.font = '700 ' + f + 'px Inter, system-ui, sans-serif';
+        if (ctx.measureText(raw).width <= maxW){ lines = [raw]; break; }
+        var sp = splitTwo(raw);
+        var roomForTwo = 2 * (f + 1) <= 0.75 * R * 0.6 * a;
+        if (sp && roomForTwo && ctx.measureText(sp[0]).width <= maxW && ctx.measureText(sp[1]).width <= maxW){ lines = sp; break; }
+        if (f <= 10){
+          lines = (sp && roomForTwo) ? [fit(ctx, sp[0], maxW), fit(ctx, sp[1], maxW)] : [fit(ctx, raw, maxW)];
+          break;
+        }
+        f -= 1;
+      }
       ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(8,11,36,.55)';
-      ctx.strokeText(label, R - 20, 0);
+      lines.forEach(function(ln, k){ ctx.strokeText(ln, R - 20, (k - (lines.length - 1) / 2) * (f + 1)); });
       ctx.fillStyle = w.picked.has(i) ? 'rgba(238,241,255,.6)' : '#fff';
-      ctx.fillText(label, R - 20, 0);
+      lines.forEach(function(ln, k){ ctx.fillText(ln, R - 20, (k - (lines.length - 1) / 2) * (f + 1)); });
       ctx.restore();
     }
     ctx.rotate(-w.rot);
@@ -711,7 +806,7 @@ html,body{margin:0}
       return (w.title || 'Untitled') + ': ' + w.result.map(function(r){ return r.text; }).join(', ');
     });
     var q = computeReq();
-    if (diffOn && diffResult) lines.push('Mod difficulty: ' + diffResult.map(function(r){ return r.text; }).join(', '));
+    if (diffResult) lines.push('Difficulty: ' +diffResult.map(function(r){ return r.text; }).join(', '));
     var txt = function(e){ return e.text; };
     if (q.hard.length) lines.push('Required mods: ' + q.hard.map(txt).join(', '));
     if (q.soft.length) lines.push(q.waivers.length
@@ -732,8 +827,8 @@ html,body{margin:0}
       runList.appendChild(k); runList.appendChild(v);
     });
     var ad = activeDiffs();
-    if (diffOn && done.length && ad.act.length){
-      var dk = document.createElement('div'); dk.className = 'run-k'; dk.textContent = 'Mod difficulty';
+    if (done.length && ad.act.length){
+      var dk = document.createElement('div'); dk.className = 'run-k'; dk.textContent = 'Difficulty';
       var dv = document.createElement('div'); dv.className = 'run-v';
       (diffResult || []).forEach(function(r){ dv.appendChild(diffChip(r)); });
       var db = document.createElement('button'); db.type = 'button'; db.dataset.diff = '1';
@@ -827,7 +922,7 @@ html,body{margin:0}
     spinAllBtn.disabled = true;
     var jobs = list.map(function(w, i){ return sleep(i * 220).then(function(){ return spinWheel(w); }); });
     Promise.all(jobs).then(function(){
-      if (diffOn && !dlg.open && activeDiffs().act.length) setTimeout(function(){ openDifficulty(true); }, 500);
+      if (!dlg.open && activeDiffs().act.length) setTimeout(function(){ openDifficulty(true); }, 500);
     });
   }
   spinAllBtn.addEventListener('click', spinAll);
@@ -968,7 +1063,9 @@ html,body{margin:0}
     wheels = starter().map(make);
     wheels.forEach(function(w){ mount(w); });
     rules = starterRules(); cancel = ['No compat mods']; renderRules();
-    diffs = starterDiffs(); diffOn = true; diffResult = null; diffOnEl.checked = true; renderDiffs();
+    diffs = starterDiffs(); diffOn = true; stdOn = true; diffResult = null;
+    diffOnEl.checked = true; stdOnEl.checked = true; renderDiffs();
+    links = starterLinks(); renderLinks();
     save(); updateEmpty(); renderSummary(); busy();
   });
 
@@ -977,20 +1074,29 @@ html,body{margin:0}
   var dSpin = document.getElementById('diff-spin');
   var dNote = document.getElementById('diff-note');
   var dWheels = [];
+  var dCloseTimer;
 
   /* groups whose mod is in the run (or that have no mod set); the rest are reported as skipped */
   function activeDiffs(){
     var q = computeReq(), act = [], skipped = [];
     diffs.forEach(function(g){
       if (!g.options.length) return;
-      var ok = !g.needs.trim() || !!termHit(g.needs, q.present);
-      (ok ? act : skipped).push(g);
+      var isMod = !!g.needs.trim();
+      if (isMod ? !diffOn : !stdOn) return;          /* its switch is off */
+      (needsMet(g.needs, q.present) ? act : skipped).push(g);
     });
-    return { act: act, skipped: skipped };
+    /* a wheel that lists other wheels in "replaces" takes their place while it is active */
+    var gone = {};
+    act.forEach(function(g){ (g.replaces || []).forEach(function(n){ gone[norm(n)] = true; }); });
+    return {
+      act: act.filter(function(g){ return !gone[norm(g.name)]; }),
+      replaced: act.filter(function(g){ return gone[norm(g.name)]; }),
+      skipped: skipped
+    };
   }
   function diffChip(r){
     var s = chip({ text: r.text, color: r.color });
-    var sm = document.createElement('small'); sm.textContent = r.group; s.appendChild(sm);
+    var sm = document.createElement('small'); sm.textContent = r.group + (r.why ? ' · ' + r.why : ''); s.appendChild(sm);
     return s;
   }
   function openDifficulty(auto){
@@ -1002,55 +1108,132 @@ html,body{margin:0}
       var card = document.createElement('div'); card.className = 'dwheel';
       card.innerHTML = '<h3></h3><div class="stage"><canvas></canvas><div class="pointer" aria-hidden="true"></div></div><div class="dres" aria-live="polite"></div>';
       card.querySelector('h3').textContent = g.name;
+      if (g.options.length > 8) card.querySelector('.stage').style.maxWidth = '290px';
       box.appendChild(card);
       var canvas = card.querySelector('canvas'); canvas.setAttribute('aria-label', g.name + ' wheel');
-      var dw = { g: g, options: g.options.map(function(t){ return { t: t }; }), rot: Math.random() * TAU,
+      var dw = { g: g, isMod: !!g.needs.trim(), multi: parseList(g.needs).length > 1, options: g.options.map(function(t){ return { t: t }; }), rot: Math.random() * TAU,
         picked: new Set(), dead: false, spinning: false, result: null, ui: { canvas: canvas, res: card.querySelector('.dres') } };
       if (window.ResizeObserver) new ResizeObserver(function(){ draw(dw); }).observe(canvas);
       return dw;
     });
-    var sub = 'Wheels for the mods in your run.';
-    if (a.skipped.length) sub += ' Skipped: ' + a.skipped.map(function(g){ return g.name + ' (' + (g.needs || 'no mod') + ' is not in this run)'; }).join(', ') + '.';
+    var sub = 'Wheels for what is in your run.';
+    if (a.replaced.length) sub += ' ' + a.replaced.map(function(g){ return g.name; }).join(' and ') + ' are covered by the combined wheel.';
+    var sk = a.skipped.filter(function(g){ return !(g.replaces || []).length; });
+    if (sk.length) sub += ' Skipped: ' + sk.map(function(g){ return g.name + ' (needs ' + g.needs + ')'; }).join(', ') + '.';
     document.getElementById('diff-sub').textContent = sub;
     dNote.textContent = ''; dSpin.disabled = false; dSpin.textContent = 'Spin';
     if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
     requestAnimationFrame(function(){ dWheels.forEach(draw); });
     if (auto) setTimeout(spinDiffs, 450);
   }
-  async function spinOne(w){
+  /* ---- links between standard and mod difficulties ----
+     1) a mod difficulty in the "top" list (Malice, Masochist) sets the standard difficulty to its top option (Legendary);
+     2) a standard difficulty at its top option sets every mod difficulty that is not normal to its own top option. */
+  function optParts(t){ return String(t).split('+').map(function(x){ return x.trim(); }).filter(Boolean); }
+  function inTop(p){ return links.top.some(function(x){ return norm(x) === norm(p); }); }
+  function topPart(t){ var ps = optParts(t).filter(inTop); return ps.length ? ps[0] : null; }
+  function isNeutral(t){ var ps = optParts(t); return ps.length > 0 && ps.every(function(x){ return norm(x) === norm(links.neutral); }); }
+  /* on a combined wheel the always-set names (Masochist) don't count as "not normal", so they are not upgraded to Malice */
+  function neutralFor(w, t){
+    var ps = optParts(t);
+    return ps.length > 0 && ps.every(function(p){
+      return norm(p) === norm(links.neutral) || (w.multi && links.both.some(function(x){ return norm(x) === norm(p); }));
+    });
+  }
+  function stdTopIdx(w){
+    for (var i = 0; i < w.options.length; i++) if (norm(w.options[i].t) === norm(links.std)) return i;
+    return -1;
+  }
+  function modTopIdx(w){
+    var best = -1, bc = 0;
+    w.options.forEach(function(o, i){ var c = optParts(o.t).filter(inTop).length; if (c > bc){ bc = c; best = i; } });
+    return best;
+  }
+  /* on a wheel that needs several mods: the option made only of the "always set" names (e.g. Masochist) */
+  function bothIdx(w){
+    var want = links.both.map(norm).sort().join('|');
+    for (var i = 0; i < w.options.length; i++){
+      if (optParts(w.options[i].t).map(norm).sort().join('|') === want) return i;
+    }
+    return modTopIdx(w);
+  }
+  function applyLinks(ws, idx){
+    var out = idx.slice(), why = ws.map(function(){ return ''; });
+    if (!links.on) return { idx: out, why: why };
+    var changed = true, guard = 0;
+    while (changed && guard++ < 4){
+      changed = false;
+      var cause = null;
+      ws.forEach(function(w, i){ if (w.isMod && !cause) cause = topPart(w.options[out[i]].t); });
+      if (cause) ws.forEach(function(w, i){
+        var si = w.isMod ? -1 : stdTopIdx(w);
+        if (si >= 0 && out[i] !== si){ out[i] = si; why[i] = 'set by ' + cause; changed = true; }
+      });
+      var stdTop = ws.some(function(w, i){ return !w.isMod && stdTopIdx(w) >= 0 && out[i] === stdTopIdx(w); });
+      if (stdTop) ws.forEach(function(w, i){
+        if (!w.isMod) return;
+        var ti = -1;
+        if (!neutralFor(w, w.options[out[i]].t)) ti = modTopIdx(w);
+        else if (w.multi && links.both.length) ti = bothIdx(w);   /* both mods present: e.g. Masochist is always set */
+        if (ti >= 0 && out[i] !== ti){ out[i] = ti; why[i] = 'set by ' + links.std; changed = true; }
+      });
+    }
+    return { idx: out, why: why };
+  }
+  async function spinOne(w, idx, quick, why){
     w.spinning = true;
-    var n = w.options.length, idx = Math.floor(Math.random() * n), a = TAU / n;
+    var n = w.options.length, a = TAU / n;
     var jitter = (Math.random() - 0.5) * a * 0.7;
     var want = mod(-((idx + 0.5) * a + jitter), TAU), delta = mod(want - mod(w.rot, TAU), TAU);
-    var rm = reduced(), extra = rm ? 0 : 5 + Math.floor(Math.random() * 2), dur = rm ? 450 : 3800 + Math.random() * 700;
+    var rm = reduced();
+    var extra = rm ? 0 : (quick ? 1 : 5 + Math.floor(Math.random() * 2));
+    var dur = rm ? 450 : (quick ? 1000 : 3800 + Math.random() * 700);
     await animateTo(w, w.rot + delta + extra * TAU, dur);
     w.spinning = false;
     if (w.dead) return;
     w.rot = mod(w.rot, TAU);
-    w.result = { t: w.options[idx].t, color: colorFor(idx, n) };
+    w.result = { t: w.options[idx].t, color: colorFor(idx, n), why: why || '' };
     draw(w);
-    w.ui.res.textContent = ''; w.ui.res.appendChild(chip({ text: w.result.t, color: w.result.color }));
+    var c = chip({ text: w.result.t, color: w.result.color });
+    if (why){ var sm = document.createElement('small'); sm.textContent = why; c.appendChild(sm); }
+    w.ui.res.textContent = ''; w.ui.res.appendChild(c);
   }
   async function spinDiffs(){
     if (!dWheels.length || dWheels.some(function(w){ return w.spinning; })) return;
     var batch = dWheels.slice();
+    clearTimeout(dCloseTimer);
     dSpin.disabled = true; dSpin.textContent = 'Spinning…'; dNote.textContent = '';
     batch.forEach(function(w){ w.result = null; w.ui.res.textContent = ''; });
-    await Promise.all(batch.map(function(w, i){ return sleep(i * 250).then(function(){ return spinOne(w); }); }));
+    /* pick every result first, apply the links, then spin: wheels that were not changed spin normally,
+       changed wheels turn quickly to their forced slice once the others have settled */
+    var nat = batch.map(function(w){ return Math.floor(Math.random() * w.options.length); });
+    var plan = applyLinks(batch, nat);
+    var first = [], later = [];
+    batch.forEach(function(w, i){ (plan.why[i] ? later : first).push(i); });
+    await Promise.all(first.map(function(i, k){ return sleep(k * 250).then(function(){ return spinOne(batch[i], plan.idx[i], false, ''); }); }));
     if (batch.some(function(w){ return w.dead; })) return;
-    diffResult = batch.map(function(w){ return { group: w.g.name, text: w.result.t, color: w.result.color }; });
+    if (later.length){
+      await sleep(350);
+      await Promise.all(later.map(function(i){ return spinOne(batch[i], plan.idx[i], true, plan.why[i]); }));
+    }
+    if (batch.some(function(w){ return w.dead; })) return;
+    diffResult = batch.map(function(w){ return { group: w.g.name, text: w.result.t, color: w.result.color, why: w.result.why }; });
     renderSummary();
-    dSpin.disabled = false; dSpin.textContent = 'Spin again'; dNote.textContent = 'Added to Your run.';
+    dSpin.disabled = false; dSpin.textContent = 'Spin again'; dNote.textContent = 'Added to Your run. Closing…';
+    clearTimeout(dCloseTimer);
+    dCloseTimer = setTimeout(function(){ if (dlg.open) dlg.close(); }, 2000);
   }
   dSpin.addEventListener('click', spinDiffs);
   document.getElementById('diff-close').addEventListener('click', function(){ dlg.close(); });
-  dlg.addEventListener('close', function(){ dWheels.forEach(function(w){ w.dead = true; }); });
+  dlg.addEventListener('close', function(){ clearTimeout(dCloseTimer); dWheels.forEach(function(w){ w.dead = true; }); });
   dlg.addEventListener('click', function(e){ if (e.target === dlg) dlg.close(); });
   runList.addEventListener('click', function(e){
     if (e.target.closest('[data-diff]')) openDifficulty(true);
   });
   var diffOnEl = document.getElementById('diff-on');
-  diffOnEl.addEventListener('change', function(){ diffOn = diffOnEl.checked; save(); renderSummary(); });
+  var stdOnEl = document.getElementById('std-on');
+  diffOnEl.addEventListener('change', function(){ diffOn = diffOnEl.checked; diffResult = null; save(); renderSummary(); });
+  stdOnEl.addEventListener('change', function(){ stdOn = stdOnEl.checked; diffResult = null; save(); renderSummary(); });
 
   /* difficulty wheel editor */
   var diffList = document.getElementById('diff-list');
@@ -1060,12 +1243,14 @@ html,body{margin:0}
       var li = document.createElement('li'); li.className = 'dgroup'; li.dataset.i = i;
       li.innerHTML =
         '<div class="rf nm"><label for="dn-' + i + '">Wheel name</label><input class="r-in d-name" id="dn-' + i + '" maxlength="60"></div>' +
-        '<div class="rf nd"><label for="dm-' + i + '">Only when this mod is in the run</label><input class="r-in d-needs" id="dm-' + i + '" maxlength="60" placeholder="blank = always"></div>' +
+        '<div class="rf nd"><label for="dm-' + i + '">Only when in the run</label><input class="r-in d-needs" id="dm-' + i + '" maxlength="120" placeholder="mods, or blank = always"></div>' +
         '<button class="btn ghost sm sq rm" type="button" data-diff-rm="1" aria-label="Remove difficulty wheel ' + (i + 1) + '">×</button>' +
-        '<div class="rf op"><label for="do-' + i + '">Options (comma separated)</label><input class="r-in d-opts" id="do-' + i + '" maxlength="240" placeholder="e.g. Revengeance, Death, Malice"></div>';
+        '<div class="rf op"><label for="do-' + i + '">Options (comma separated)</label><input class="r-in d-opts" id="do-' + i + '" maxlength="240" placeholder="e.g. Revengeance, Death, Malice"></div>' +
+        '<div class="rf rp"><label for="dr-' + i + '">Replaces these wheels when it appears</label><input class="r-in d-repl" id="dr-' + i + '" maxlength="240" placeholder="wheel names, or blank = none"></div>';
       li.querySelector('.d-name').value = g.name;
       li.querySelector('.d-needs').value = g.needs;
       li.querySelector('.d-opts').value = g.options.join(', ');
+      li.querySelector('.d-repl').value = (g.replaces || []).join(', ');
       diffList.appendChild(li);
     });
   }
@@ -1073,8 +1258,9 @@ html,body{margin:0}
     var t = e.target, li = t.closest('li'); if (!li) return;
     var g = diffs[+li.dataset.i]; if (!g) return;
     if (t.classList.contains('d-name')) g.name = t.value.slice(0, 60);
-    else if (t.classList.contains('d-needs')) g.needs = t.value.slice(0, 60);
+    else if (t.classList.contains('d-needs')) g.needs = t.value.slice(0, 120);
     else if (t.classList.contains('d-opts')) g.options = parseList(t.value);
+    else if (t.classList.contains('d-repl')) g.replaces = parseList(t.value);
     else return;
     diffResult = null; save(); renderSummary();
   });
@@ -1084,10 +1270,31 @@ html,body{margin:0}
     diffResult = null; renderDiffs(); save(); renderSummary();
   });
   document.getElementById('add-diff').addEventListener('click', function(){
-    diffs.push({ name: 'New difficulty wheel', needs: '', options: [] });
+    diffs.push({ name: 'New difficulty wheel', needs: '', options: [], replaces: [] });
     renderDiffs(); save(); renderSummary();
     var last = diffList.lastElementChild;
     if (last){ var n = last.querySelector('.d-name'); n.focus(); n.select(); }
+  });
+
+  /* difficulty link settings */
+  var linkOnEl = document.getElementById('link-on');
+  var linkStdEl = document.getElementById('link-std');
+  var linkTopEl = document.getElementById('link-top');
+  var linkNeutralEl = document.getElementById('link-neutral');
+  var linkBothEl = document.getElementById('link-both');
+  function renderLinks(){
+    linkBothEl.value = links.both.join(', ');
+    linkOnEl.checked = links.on;
+    linkStdEl.value = links.std;
+    linkTopEl.value = links.top.join(', ');
+    linkNeutralEl.value = links.neutral;
+  }
+  function readLinks(){
+    links = cleanLinks({ on: linkOnEl.checked, std: linkStdEl.value, top: parseList(linkTopEl.value), neutral: linkNeutralEl.value, both: parseList(linkBothEl.value) });
+    save();
+  }
+  [linkOnEl, linkStdEl, linkTopEl, linkNeutralEl, linkBothEl].forEach(function(el){
+    el.addEventListener(el === linkOnEl ? 'change' : 'input', readLinks);
   });
 
   /* ---------- boot ---------- */
@@ -1097,9 +1304,12 @@ html,body{margin:0}
   cancel = saved ? saved.cancel : ['No compat mods'];
   diffs = saved ? saved.diffs : starterDiffs();
   diffOn = saved ? saved.diffOn : true;
+  stdOn = saved ? saved.stdOn : true;
+  links = saved ? saved.links : starterLinks();
   diffOnEl.checked = diffOn;
+  stdOnEl.checked = stdOn;
   wheels.forEach(function(w){ mount(w); });
-  renderRules(); renderDiffs(); updateEmpty(); renderSummary(); busy();
+  renderRules(); renderDiffs(); renderLinks(); updateEmpty(); renderSummary(); busy();
   if (document.fonts && document.fonts.ready){
     document.fonts.ready.then(function(){ wheels.forEach(draw); });
   }
