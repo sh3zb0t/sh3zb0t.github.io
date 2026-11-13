@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Terraria Spin Wheels</title>
+<meta name="description" content="Let fate pick your Terraria loadout: spin for a class, mods, handicaps and difficulty.">
+<meta name="theme-color" content="#f5a73b">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Terraria Spin Wheels">
+<meta property="og:title" content="Terraria Spin Wheels">
+<meta property="og:description" content="Let fate pick your Terraria loadout: spin for a class, mods, handicaps and difficulty.">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Terraria Spin Wheels">
+<meta name="twitter:description" content="Let fate pick your Terraria loadout: spin for a class, mods, handicaps and difficulty.">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pixelify+Sans:wght@500;700&display=swap">
 <style>
 /* Layout: header with grass strip, a "Your run" summary panel, then an auto-fill grid of inventory-style wheel panels.
@@ -37,7 +46,8 @@ body{
   background-size:180px 180px;
   color:var(--text);
   font:400 15px/1.45 var(--body);
-  padding-block:20px 48px;
+  padding-top:max(20px,env(safe-area-inset-top,0px));
+  padding-bottom:48px;
   padding-left:max(16px,env(safe-area-inset-left,0px));
   padding-right:max(16px,env(safe-area-inset-right,0px));
 }
@@ -72,6 +82,15 @@ h1{margin:0;font:700 clamp(28px,5.5vw,44px)/1.05 var(--display);letter-spacing:.
 .btn.danger.confirm{color:var(--torch-ink);background:var(--danger)}
 .btn.danger:hover:not(:disabled){color:var(--danger)}
 .btn.sq{min-width:36px;padding:0}
+.btn.pin.on{background:var(--torch);color:var(--torch-ink);box-shadow:0 3px 0 var(--torch-deep)}
+.debugbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding:10px 14px;background:var(--slot);
+  border:2px solid var(--torch-deep);border-radius:4px;box-shadow:inset 0 0 0 1px var(--torch)}
+.debugbar strong{font:700 16px/1.2 var(--display);color:var(--torch)}
+.debugbar span{flex:1 1 280px;min-width:0;color:var(--muted);font-size:13px}
+.dbg-row{display:flex;gap:8px;width:100%}
+select.dbg-sel{flex:1;min-width:0;height:32px;padding:0 8px;background:var(--panel);color:var(--text);
+  border:2px solid var(--edge);border-radius:3px;font:500 13px var(--body)}
+select.dbg-sel:focus{outline:none;border-color:var(--torch)}
 
 /* run summary */
 .run{background:var(--panel);border:2px solid var(--edge);border-radius:4px;
@@ -98,6 +117,8 @@ h2{margin:0;font:700 20px/1.2 var(--display);letter-spacing:.02em}
 .chip.skip{opacity:.6;border-style:dashed}
 .chip.skip .nm{text-decoration:line-through}
 .note{color:var(--muted);font-size:13px;align-self:center}
+a.chip.packlink{color:var(--text);text-decoration:none;border-color:var(--torch-deep);box-shadow:inset 0 0 0 1px var(--torch)}
+a.chip.packlink:hover{filter:brightness(1.2);text-decoration:underline}
 
 /* wheels */
 .wheels{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:20px;align-items:start}
@@ -181,7 +202,8 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
 .linkbox{display:flex;flex-direction:column;gap:10px;padding:10px;background:var(--slot);border:2px solid var(--edge);border-radius:3px;box-shadow:inset 0 0 0 1px var(--panel-hi)}
 .linkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px}
 .dlg{padding:0;border:2px solid var(--edge);border-radius:4px;background:var(--panel);color:var(--text);
-  width:min(720px,calc(100% - 32px));max-height:calc(100% - 32px);overflow:auto;box-shadow:inset 0 0 0 2px var(--panel-hi),0 8px 0 var(--edge)}
+  width:min(720px,calc(100% - 32px - 2*max(env(safe-area-inset-left,0px),env(safe-area-inset-right,0px))));
+  max-height:calc(100% - 32px - 2*max(env(safe-area-inset-top,0px),env(safe-area-inset-bottom,0px)));overflow:auto;box-shadow:inset 0 0 0 2px var(--panel-hi),0 8px 0 var(--edge)}
 .dlg::backdrop{background:rgba(8,11,36,.8)}
 .dlg-body{padding:18px;display:flex;flex-direction:column;gap:14px}
 .dlg-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
@@ -217,7 +239,7 @@ html,body{margin:0}
     <div class="top">
       <div>
         <h1>Terraria Spin Wheels</h1>
-        <p class="sub">Spin for a class, a set of mods and a handicap. Add a wheel for anything else, then edit its options.</p>
+        <p class="sub">Let fate pick your loadout. The Guide takes no responsibility.</p>
       </div>
       <div class="toolbar">
         <button class="btn" id="add-wheel" type="button">Add wheel</button>
@@ -225,6 +247,13 @@ html,body{margin:0}
     </div>
     <div class="grass" aria-hidden="true"></div>
   </header>
+
+  <section class="debugbar" id="debugbar" aria-label="Debug mode" hidden>
+    <strong>Debug mode</strong>
+    <span>Pin an option to force it on that wheel's next spin. Spin a single wheel to re-roll just that one. In the difficulty window every wheel gets a Force box and its own Re-roll.</span>
+    <button class="btn sm" id="dbg-clear" type="button">Clear pins</button>
+    <button class="btn sm" id="dbg-exit" type="button">Exit</button>
+  </section>
 
   <section class="run" aria-labelledby="run-h">
     <div class="run-head">
@@ -268,12 +297,14 @@ html,body{margin:0}
       <div class="linkbox">
         <label class="lock" for="link-on"><input type="checkbox" id="link-on" checked> Link standard and mod difficulties</label>
         <div class="linkgrid">
+          <div class="rf"><label for="link-force">Set the top standard difficulty</label><input class="r-in" id="link-force" maxlength="120"></div>
           <div class="rf"><label for="link-top">Top mod difficulties</label><input class="r-in" id="link-top" maxlength="120"></div>
-          <div class="rf"><label for="link-std">Top standard difficulty</label><input class="r-in" id="link-std" maxlength="60"></div>
-          <div class="rf"><label for="link-neutral">Normal option</label><input class="r-in" id="link-neutral" maxlength="60"></div>
+          <div class="rf"><label for="link-lift">Pushed to the top by the top standard difficulty</label><input class="r-in" id="link-lift" maxlength="120"></div>
+          <div class="rf"><label for="link-std">Top standard difficulty</label><input class="r-in" id="link-std" maxlength="60" placeholder="Legendary"></div>
+          <div class="rf"><label for="link-neutral">Normal option</label><input class="r-in" id="link-neutral" maxlength="60" placeholder="Normal"></div>
           <div class="rf"><label for="link-both">Always set on combined wheels</label><input class="r-in" id="link-both" maxlength="120"></div>
         </div>
-        <p class="rules-help">Rolling a top mod difficulty sets the standard difficulty to its top option. Rolling the top standard difficulty sets every mod difficulty that is not normal to its own top option. On a combined wheel (one that needs several mods, such as Calamity and Fargo together) the top standard difficulty also always sets the options listed under "Always set on combined wheels", even when the roll was Normal, so Legendary gives Masochist. Forced results are marked "set by" in the window and in Your run.</p>
+        <p class="rules-help">Rolling a mod difficulty listed under "Set the top standard difficulty" (Malice) sets the standard difficulty to its top option. Masochist is not listed, so Master with Masochist is possible. Rolling the top standard difficulty pushes the mod difficulties listed under "Pushed to the top" to their own top option, so Death becomes Malice and Eternity becomes Masochist, while Revengeance stays as rolled. Malice is only possible on the top standard difficulty. On a combined wheel (one that needs several mods, such as Calamity and Fargo together) the top standard difficulty always gives the options listed under "Always set on combined wheels", even when the roll was Normal, because Masochist overrides Death and Malice. Forced results are marked "set by" in the window and in Your run.</p>
       </div>
     </div>
   </details>
@@ -328,6 +359,8 @@ html,body{margin:0}
   var stdOn = true;
   var links = starterLinks();
   var diffResult = null;
+  var debug = false;          /* unlocked by the Konami code, never saved */
+  var debugDiff = {};         /* forced difficulty picks by wheel name, for the session */
   var seq = 0;
 
   function mod(a, m){ return ((a % m) + m) % m; }
@@ -345,7 +378,7 @@ html,body{margin:0}
     return [
       { title: 'Class', picks: 1, options: ['Melee','Ranger','Mage','Summoner','Rogue','Bard','Healer','Thrower'] },
       { title: 'Mods', picks: 2, options: ['Calamity Mod','Thorium Mod',"Fargo's Souls",'Spirit Mod','Redemption','Stars Above','Secrets of the Shadows','Starlight River'] },
-      { title: 'Handicap', picks: 1, options: ['No armor','No healing potions','No grappling hook','No wings or mounts','Max 3 accessories','No buff potions','One life (Hardcore)','No recall or mirrors','Weapons from loot only','No magic storage','Autopause always off','No compat mods'] }
+      { title: 'Handicap', picks: 2, options: ['No armor','No healing potions','No grappling hook','No wings or mounts','Max 3 accessories','No buff potions','One life (Hardcore)','No recall or mirrors','Weapons from loot only','No magic storage','Autopause always off','No vein miner mod','No compat mods'] }
     ];
   }
   function starterRules(){
@@ -353,13 +386,26 @@ html,body{margin:0}
     return [
       { if: ['Bard | Healer | Thrower'], add: ['Thorium Mod'], hard: true },
       { if: ['Rogue'], add: ['Calamity Mod'], hard: true },
-      { if: ['Bard | Healer','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer Compat'], hard: false },
-      { if: ['Bard | Healer',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer Compat'], hard: false },
+      { if: ['Bard | Healer | Thrower','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Bard | Healer | Thrower',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Bard | Healer | Thrower','Secrets of the Shadows'], add: ['Helheim','SOTS Bard & Healer & Thrower Compat'], hard: false },
       { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Rogue','Thorium Mod'], add: ['Thrower Unification Mod'], hard: false },
       { if: ['Calamity Mod',"Fargo's Souls"], add: ["Fargo's Souls DLC"], hard: false }
     ];
   }
   function starterModDiffs(){
+    return [
+      { name: 'Calamity difficulty', needs: 'Calamity Mod', options: ['Normal','Revengeance','Death','Malice'], replaces: [] },
+      { name: "Fargo's Souls difficulty", needs: "Fargo's Souls", options: ['Normal','Eternity','Masochist'], replaces: [] },
+      { name: 'Calamity + Fargo difficulty', needs: "Calamity Mod, Fargo's Souls",
+        options: ['Normal','Revengeance','Death','Malice','Eternity','Masochist',
+          'Revengeance + Eternity','Revengeance + Masochist','Death + Eternity','Malice + Eternity'],
+        replaces: ['Calamity difficulty', "Fargo's Souls difficulty"] }
+    ];
+  }
+  /* the mod wheels from before Masochist overrode Death and Malice (those combined options existed), so unedited copies upgrade */
+  function previousModDiffs3(){
     return [
       { name: 'Calamity difficulty', needs: 'Calamity Mod', options: ['Normal','Revengeance','Death','Malice'], replaces: [] },
       { name: "Fargo's Souls difficulty", needs: "Fargo's Souls", options: ['Normal','Eternity','Masochist'], replaces: [] },
@@ -379,17 +425,20 @@ html,body{margin:0}
         replaces: ['Calamity difficulty', "Fargo's Souls difficulty"] }
     ];
   }
-  function starterLinks(){ return { on: true, std: 'Legendary', top: ['Malice','Masochist'], neutral: 'Normal', both: ['Masochist'] }; }
+  function starterLinks(){ return { on: true, std: 'Legendary', top: ['Malice','Masochist'], force: ['Malice'], lift: ['Death','Malice','Eternity','Masochist'], neutral: 'Normal', both: ['Masochist'] }; }
   function cleanLinks(o){
     var d = starterLinks();
     o = o || {};
-    return { on: o.on !== false, std: String(o.std || d.std).trim().slice(0, 60),
-      top: Array.isArray(o.top) ? cleanList(o.top) : d.top, neutral: String(o.neutral || d.neutral).trim().slice(0, 60),
+    return { on: o.on !== false, std: String(o.std == null ? '' : o.std).trim().slice(0, 60) || d.std,
+      top: Array.isArray(o.top) ? cleanList(o.top) : d.top, neutral: String(o.neutral == null ? '' : o.neutral).trim().slice(0, 60) || d.neutral,
+      /* older saves had no such list: every top mod difficulty forced it, except Masochist, which no longer does */
+      force: Array.isArray(o.force) ? cleanList(o.force) : (Array.isArray(o.top) ? cleanList(o.top).filter(function(x){ return x.toLowerCase() !== 'masochist'; }) : d.force),
+      lift: Array.isArray(o.lift) ? cleanList(o.lift) : d.lift,
       both: Array.isArray(o.both) ? cleanList(o.both) : d.both };
   }
   /* A group with no mod is a standard difficulty (switch: Difficulty roll); a group with a mod is a mod difficulty (switch: Mod difficulty roll). */
   function starterDiffs(){
-    return [{ name: 'Difficulty', needs: '', options: ['Expert','Master','Legendary'], replaces: [] }].concat(starterModDiffs());
+    return [{ name: 'Difficulty', needs: '', options: ['Normal','Expert','Master','Legendary'], replaces: [] }].concat(starterModDiffs());
   }
   function previousModDiffs(){
     return [
@@ -407,13 +456,20 @@ html,body{margin:0}
   function needsMet(needs, present){
     return parseList(needs).every(function(t){ return !!termHit(t, present); });
   }
-  /* An unedited Handicap list gains the newer standard handicaps. */
+  /* An unedited Handicap list gains the newer standard handicaps, and an unchanged single pick becomes two. */
   function upgradeWheels(ws){
-    var prev = ['No armor','No healing potions','No grappling hook','No wings or mounts','Max 3 accessories','No buff potions','One life (Hardcore)','No recall or mirrors','Weapons from loot only','No compat mods'];
+    var base = ['No armor','No healing potions','No grappling hook','No wings or mounts','Max 3 accessories','No buff potions','One life (Hardcore)','No recall or mirrors','Weapons from loot only'];
+    var prev1 = base.concat(['No compat mods']);
+    var prev2 = base.concat(['No magic storage','Autopause always off','No compat mods']);
     ws.forEach(function(w){
-      if (w && w.title === 'Handicap' && Array.isArray(w.options) && JSON.stringify(w.options) === JSON.stringify(prev)){
-        w.options = w.options.slice(0, -1).concat(['No magic storage','Autopause always off','No compat mods']);
+      if (!w || w.title !== 'Handicap' || !Array.isArray(w.options)) return;
+      var s = JSON.stringify(w.options), up = false;
+      if (s === JSON.stringify(prev1)){
+        w.options = base.concat(['No magic storage','Autopause always off','No vein miner mod','No compat mods']); up = true;
+      } else if (s === JSON.stringify(prev2)){
+        w.options = base.concat(['No magic storage','Autopause always off','No vein miner mod','No compat mods']); up = true;
       }
+      if (up && (w.picks === 1 || w.picks == null)) w.picks = 2;
     });
     return ws;
   }
@@ -446,9 +502,56 @@ html,body{margin:0}
       { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false }
     ];
   }
+  /* the starter set before Thrower joined the Bard & Healer compat rules */
+  function previousStarterRules3(){
+    return [
+      { if: ['Bard | Healer | Thrower'], add: ['Thorium Mod'], hard: true },
+      { if: ['Rogue'], add: ['Calamity Mod'], hard: true },
+      { if: ['Bard | Healer','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer Compat'], hard: false },
+      { if: ['Bard | Healer',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer Compat'], hard: false },
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Calamity Mod',"Fargo's Souls"], add: ["Fargo's Souls DLC"], hard: false }
+    ];
+  }
+  /* the starter set before the Rogue + Thorium unification rule and the "& Thrower" compat names */
+  function previousStarterRules4(){
+    return [
+      { if: ['Bard | Healer | Thrower'], add: ['Thorium Mod'], hard: true },
+      { if: ['Rogue'], add: ['Calamity Mod'], hard: true },
+      { if: ['Bard | Healer | Thrower','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer Compat'], hard: false },
+      { if: ['Bard | Healer | Thrower',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer Compat'], hard: false },
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Calamity Mod',"Fargo's Souls"], add: ["Fargo's Souls DLC"], hard: false }
+    ];
+  }
+  /* the starter set before the Secrets of the Shadows compat rule */
+  function previousStarterRules5(){
+    return [
+      { if: ['Bard | Healer | Thrower'], add: ['Thorium Mod'], hard: true },
+      { if: ['Rogue'], add: ['Calamity Mod'], hard: true },
+      { if: ['Bard | Healer | Thrower','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Bard | Healer | Thrower',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Rogue','Thorium Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Calamity Mod',"Fargo's Souls"], add: ["Fargo's Souls DLC"], hard: false }
+    ];
+  }
+  /* the starter set before Helheim was added to the Secrets of the Shadows compat rule */
+  function previousStarterRules6(){
+    return [
+      { if: ['Bard | Healer | Thrower'], add: ['Thorium Mod'], hard: true },
+      { if: ['Rogue'], add: ['Calamity Mod'], hard: true },
+      { if: ['Bard | Healer | Thrower','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Bard | Healer | Thrower',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Bard | Healer | Thrower','Secrets of the Shadows'], add: ['SOTS Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Rogue','Thorium Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Calamity Mod',"Fargo's Souls"], add: ["Fargo's Souls DLC"], hard: false }
+    ];
+  }
   function migrateRules(rs){
     var s = JSON.stringify(rs);
-    var old = [previousStarterRules(), previousStarterRules2()].some(function(p){ return JSON.stringify(cleanRules(p)) === s; });
+    var old = [previousStarterRules(), previousStarterRules2(), previousStarterRules3(), previousStarterRules4(), previousStarterRules5(), previousStarterRules6()].some(function(p){ return JSON.stringify(cleanRules(p)) === s; });
     return old ? starterRules() : rs;
   }
   function parseList(v){ return String(v).split(',').map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 24); }
@@ -468,7 +571,7 @@ html,body{margin:0}
       id: 'w' + (++seq),
       title: String(d.title == null ? 'Wheel' : d.title).slice(0, 60),
       options: opts, picks: picks, locked: !!d.locked,
-      result: [], picked: new Set(), rot: Math.random() * TAU,
+      result: [], picked: new Set(), forced: new Set(), rot: Math.random() * TAU,
       spinning: false, dead: false, ui: null
     };
   }
@@ -515,14 +618,18 @@ html,body{margin:0}
       if (!ds) ds = starterDiffs();
       /* unedited Calamity and Fargo wheels upgrade to the set that includes the combined wheel */
       var modG = ds.filter(function(g){ return g.needs.trim(); });
-      if ([previousModDiffs(), previousModDiffs2()].some(function(p){ return JSON.stringify(modG) === JSON.stringify(cleanDiffs(p)); })){
+      if ([previousModDiffs(), previousModDiffs2(), previousModDiffs3()].some(function(p){ return JSON.stringify(modG) === JSON.stringify(cleanDiffs(p)); })){
         ds = ds.filter(function(g){ return !g.needs.trim(); }).concat(starterModDiffs());
       }
       if (v < 4){
         var sg = ds.filter(function(g){ return !g.needs.trim(); })[0];
-        if (!sg){ sg = { name: 'Difficulty', needs: '', options: ['Expert','Master','Legendary'], replaces: [] }; ds.unshift(sg); }
+        if (!sg){ sg = { name: 'Difficulty', needs: '', options: ['Normal','Expert','Master','Legendary'], replaces: [] }; ds.unshift(sg); }
         if (stdOpts && stdOpts.length) sg.options = stdOpts;
       }
+      /* an unedited base difficulty wheel gains the Normal option */
+      ds.forEach(function(g){
+        if (!g.needs.trim() && JSON.stringify(g.options) === JSON.stringify(['Expert','Master','Legendary'])) g.options = ['Normal'].concat(g.options);
+      });
       return { wheels: ws, rules: rs, cancel: cn, diffs: ds, diffOn: on, stdOn: std, links: lk };
     } catch (e) { return null; }
   }
@@ -663,7 +770,16 @@ html,body{margin:0}
       inp.id = w.id + '-opt-' + i; inp.setAttribute('aria-label', 'Option ' + (i + 1));
       var x = document.createElement('button'); x.type = 'button'; x.className = 'btn ghost sm sq'; x.dataset.act = 'rm';
       x.setAttribute('aria-label', 'Remove option ' + (i + 1)); x.textContent = '×';
-      row.appendChild(sw); row.appendChild(inp); row.appendChild(x);
+      row.appendChild(sw); row.appendChild(inp);
+      if (debug){
+        var pin = document.createElement('button'); pin.type = 'button'; pin.dataset.act = 'pin';
+        var pinned = w.forced.has(o);
+        pin.className = 'btn sm pin' + (pinned ? ' on' : ''); pin.textContent = 'Pin';
+        pin.setAttribute('aria-pressed', pinned ? 'true' : 'false');
+        pin.setAttribute('aria-label', 'Force option ' + (i + 1) + ' on the next spin');
+        row.appendChild(pin);
+      }
+      row.appendChild(x);
       li.appendChild(row);
       ul.appendChild(li);
     });
@@ -812,7 +928,22 @@ html,body{margin:0}
     if (q.soft.length) lines.push(q.waivers.length
       ? 'Compat mods: waived by ' + q.waivers.join(', ')
       : 'Compat mods: ' + q.soft.map(txt).join(', '));
+    var pk = modpackNote(q);
+    if (pk) lines.push('Modpack: ' + pk.text + ' (' + pk.url + ')');
     return lines.join('\n');
+  }
+  /* Mod combos that match a known modpack. Every listed mod must be part of the run (rolled, or added by a rule that isn't waived). */
+  var PACK_NOTE = 'Smells like Infernal Eclipse of Ragnarok modpack';
+  var PACK_URL = 'https://steamcommunity.com/sharedfiles/filedetails/?id=3456508757';
+  var MODPACKS = [
+    { needs: ['Thorium Mod','Calamity Mod',"Fargo's Souls"], text: PACK_NOTE, url: PACK_URL },
+    { needs: ['Calamity Mod',"Fargo's Souls",'Secrets of the Shadows'], text: PACK_NOTE, url: PACK_URL }
+  ];
+  function modpackNote(q){
+    for (var i = 0; i < MODPACKS.length; i++){
+      if (MODPACKS[i].needs.every(function(n){ return q.present[norm(n)]; })) return MODPACKS[i];
+    }
+    return null;
   }
   function renderSummary(){
     var done = wheels.filter(function(w){ return w.result.length; });
@@ -827,6 +958,13 @@ html,body{margin:0}
       runList.appendChild(k); runList.appendChild(v);
     });
     var ad = activeDiffs();
+    /* a difficulty roll only stands while the same difficulty wheels are active; rule, cancel-list and wheel edits can change that set */
+    if (diffResult){
+      var stillValid = diffResult.length === ad.act.length && ad.act.every(function(g){
+        return diffResult.some(function(r){ return norm(r.group) === norm(g.name); });
+      });
+      if (!stillValid){ diffResult = null; say('Run changed, roll difficulty again'); }
+    }
     if (done.length && ad.act.length){
       var dk = document.createElement('div'); dk.className = 'run-k'; dk.textContent = 'Difficulty';
       var dv = document.createElement('div'); dv.className = 'run-v';
@@ -851,6 +989,18 @@ html,body{margin:0}
     };
     row('Required mods', q.hard, 'need', false);
     row('Compat mods', q.soft, 'compat', q.waivers.length > 0);
+    var pk = modpackNote(q);
+    if (pk){
+      var pkk = document.createElement('div'); pkk.className = 'run-k'; pkk.textContent = 'Modpack';
+      var pkv = document.createElement('div'); pkv.className = 'run-v';
+      var pa = document.createElement('a'); pa.className = 'chip packlink';
+      pa.href = pk.url; pa.target = '_blank'; pa.rel = 'noopener noreferrer';
+      var pi = document.createElement('i'); pi.style.background = 'var(--torch)'; pa.appendChild(pi);
+      pa.appendChild(document.createTextNode(pk.text));
+      var ps = document.createElement('small'); ps.textContent = 'Steam Workshop ↗'; pa.appendChild(ps);
+      pkv.appendChild(pa);
+      runList.appendChild(pkk); runList.appendChild(pkv);
+    }
     markRules(q);
   }
   var statusTimer;
@@ -893,12 +1043,15 @@ html,body{margin:0}
     w.spinning = true; w.result = []; w.picked = new Set(); diffResult = null;
     setSpinUI(w); renderResult(w); busy(); draw(w);
     var total = Math.min(w.picks, w.options.length);
+    /* debug: pinned options come first, in option order, up to the number of picks */
+    var pins = debug ? w.options.map(function(o, i){ return w.forced.has(o) ? i : -1; }).filter(function(i){ return i >= 0; }) : [];
     for (var k = 0; k < total; k++){
       if (w.dead) return;
       var n = w.options.length, pool = [];
       for (var i = 0; i < n; i++) if (!w.picked.has(i)) pool.push(i);
       if (!pool.length) break;
-      var idx = pool[Math.floor(Math.random() * pool.length)];
+      var idx = pins.filter(function(i){ return !w.picked.has(i); })[0];
+      if (idx === undefined) idx = pool[Math.floor(Math.random() * pool.length)];
       var a = TAU / n;
       var jitter = (Math.random() - 0.5) * a * 0.7;
       var want = mod(-((idx + 0.5) * a + jitter), TAU);
@@ -981,6 +1134,11 @@ html,body{margin:0}
     else if (act === 'pm'){ if (w.picks > 1){ w.picks--; renderPicks(w); save(); } }
     else if (act === 'pp'){ if (w.picks < 12){ w.picks++; renderPicks(w); save(); } }
     else if (act === 'add') addFromInput(w);
+    else if (act === 'pin'){
+      var po = w.options[+b.closest('li').dataset.i];
+      if (w.forced.has(po)) w.forced.delete(po); else w.forced.add(po);
+      b.classList.toggle('on', w.forced.has(po)); b.setAttribute('aria-pressed', w.forced.has(po) ? 'true' : 'false');
+    }
     else if (act === 'rm'){
       var i = +b.closest('li').dataset.i;
       w.options.splice(i, 1); w.picked = new Set();
@@ -1111,8 +1269,20 @@ html,body{margin:0}
       if (g.options.length > 8) card.querySelector('.stage').style.maxWidth = '290px';
       box.appendChild(card);
       var canvas = card.querySelector('canvas'); canvas.setAttribute('aria-label', g.name + ' wheel');
+      var sel = null, rb = null;
+      if (debug){
+        var dbg = document.createElement('div'); dbg.className = 'dbg-row';
+        sel = document.createElement('select'); sel.className = 'dbg-sel'; sel.setAttribute('aria-label', 'Force result for ' + g.name);
+        var o0 = document.createElement('option'); o0.value = ''; o0.textContent = 'Random'; sel.appendChild(o0);
+        g.options.forEach(function(t, i){ var o = document.createElement('option'); o.value = i; o.textContent = 'Force: ' + t; sel.appendChild(o); });
+        if (debugDiff[g.name] && +debugDiff[g.name] < g.options.length) sel.value = debugDiff[g.name];
+        rb = document.createElement('button'); rb.type = 'button'; rb.className = 'btn sm'; rb.textContent = 'Re-roll';
+        dbg.appendChild(sel); dbg.appendChild(rb); card.appendChild(dbg);
+      }
       var dw = { g: g, isMod: !!g.needs.trim(), multi: parseList(g.needs).length > 1, options: g.options.map(function(t){ return { t: t }; }), rot: Math.random() * TAU,
-        picked: new Set(), dead: false, spinning: false, result: null, ui: { canvas: canvas, res: card.querySelector('.dres') } };
+        picked: new Set(), dead: false, spinning: false, result: null, cur: null, nat: null, ui: { canvas: canvas, res: card.querySelector('.dres'), sel: sel } };
+      if (sel) sel.addEventListener('change', function(){ debugDiff[g.name] = sel.value; });
+      if (rb) rb.addEventListener('click', function(){ spinDiffs([dw]); });
       if (window.ResizeObserver) new ResizeObserver(function(){ draw(dw); }).observe(canvas);
       return dw;
     });
@@ -1124,14 +1294,19 @@ html,body{margin:0}
     dNote.textContent = ''; dSpin.disabled = false; dSpin.textContent = 'Spin';
     if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
     requestAnimationFrame(function(){ dWheels.forEach(draw); });
-    if (auto) setTimeout(spinDiffs, 450);
+    if (auto) setTimeout(function(){ spinDiffs(); }, 450);
   }
   /* ---- links between standard and mod difficulties ----
-     1) a mod difficulty in the "top" list (Malice, Masochist) sets the standard difficulty to its top option (Legendary);
-     2) a standard difficulty at its top option sets every mod difficulty that is not normal to its own top option. */
+     1) a mod difficulty in the "force" list (Malice) sets the standard difficulty to its top option (Legendary);
+        Masochist is not in it, so Master + Masochist can happen;
+     2) a standard difficulty at its top option pushes the mod difficulties in the "lift" list (Death and above, Eternity
+        and above) to their own top option: Death becomes Malice, Eternity becomes Masochist, Revengeance stays;
+        on a combined wheel it always gives the "both" option (Masochist), since Masochist overrides Death and Malice. */
   function optParts(t){ return String(t).split('+').map(function(x){ return x.trim(); }).filter(Boolean); }
   function inTop(p){ return links.top.some(function(x){ return norm(x) === norm(p); }); }
-  function topPart(t){ var ps = optParts(t).filter(inTop); return ps.length ? ps[0] : null; }
+  function inLift(p){ return links.lift.some(function(x){ return norm(x) === norm(p); }); }
+  function inForce(p){ return links.force.some(function(x){ return norm(x) === norm(p); }); }
+  function topPart(t){ var ps = optParts(t).filter(inForce); return ps.length ? ps[0] : null; }
   function isNeutral(t){ var ps = optParts(t); return ps.length > 0 && ps.every(function(x){ return norm(x) === norm(links.neutral); }); }
   /* on a combined wheel the always-set names (Masochist) don't count as "not normal", so they are not upgraded to Malice */
   function neutralFor(w, t){
@@ -1173,8 +1348,8 @@ html,body{margin:0}
       if (stdTop) ws.forEach(function(w, i){
         if (!w.isMod) return;
         var ti = -1;
-        if (!neutralFor(w, w.options[out[i]].t)) ti = modTopIdx(w);
-        else if (w.multi && links.both.length) ti = bothIdx(w);   /* both mods present: e.g. Masochist is always set */
+        if (w.multi && links.both.length) ti = bothIdx(w);          /* both mods present: Masochist overrides Death and Malice, so it is the result */
+        else if (optParts(w.options[out[i]].t).some(inLift)) ti = modTopIdx(w);
         if (ti >= 0 && out[i] !== ti){ out[i] = ti; why[i] = 'set by ' + links.std; changed = true; }
       });
     }
@@ -1193,37 +1368,69 @@ html,body{margin:0}
     if (w.dead) return;
     w.rot = mod(w.rot, TAU);
     w.result = { t: w.options[idx].t, color: colorFor(idx, n), why: why || '' };
+    w.cur = idx;
     draw(w);
     var c = chip({ text: w.result.t, color: w.result.color });
     if (why){ var sm = document.createElement('small'); sm.textContent = why; c.appendChild(sm); }
     w.ui.res.textContent = ''; w.ui.res.appendChild(c);
   }
-  async function spinDiffs(){
-    if (!dWheels.length || dWheels.some(function(w){ return w.spinning; })) return;
-    var batch = dWheels.slice();
-    clearTimeout(dCloseTimer);
-    dSpin.disabled = true; dSpin.textContent = 'Spinning…'; dNote.textContent = '';
-    batch.forEach(function(w){ w.result = null; w.ui.res.textContent = ''; });
-    /* pick every result first, apply the links, then spin: wheels that were not changed spin normally,
-       changed wheels turn quickly to their forced slice once the others have settled */
-    var nat = batch.map(function(w){ return Math.floor(Math.random() * w.options.length); });
-    var plan = applyLinks(batch, nat);
-    var first = [], later = [];
-    batch.forEach(function(w, i){ (plan.why[i] ? later : first).push(i); });
-    await Promise.all(first.map(function(i, k){ return sleep(k * 250).then(function(){ return spinOne(batch[i], plan.idx[i], false, ''); }); }));
-    if (batch.some(function(w){ return w.dead; })) return;
-    if (later.length){
-      await sleep(350);
-      await Promise.all(later.map(function(i){ return spinOne(batch[i], plan.idx[i], true, plan.why[i]); }));
-    }
-    if (batch.some(function(w){ return w.dead; })) return;
-    diffResult = batch.map(function(w){ return { group: w.g.name, text: w.result.t, color: w.result.color, why: w.result.why }; });
-    renderSummary();
-    dSpin.disabled = false; dSpin.textContent = 'Spin again'; dNote.textContent = 'Added to Your run. Closing…';
-    clearTimeout(dCloseTimer);
-    dCloseTimer = setTimeout(function(){ if (dlg.open) dlg.close(); }, 2000);
+  /* the slice the Force box asks for in debug mode, or -1 for a random roll */
+  function forcedIdx(w){
+    if (!debug || !w.ui.sel || w.ui.sel.value === '') return -1;
+    var v = +w.ui.sel.value;
+    return v >= 0 && v < w.options.length ? v : -1;
   }
-  dSpin.addEventListener('click', spinDiffs);
+  /* Spins every difficulty wheel, or only the wheels in `only` (debug re-roll). The other wheels keep their rolls,
+     the links are applied again, and any wheel the links change turns quickly to its new slice. */
+  async function spinDiffs(only){
+    var arr = dWheels;
+    if (!arr.length || arr.busy) return;
+    arr.busy = true;
+    try {
+      var batch = arr.slice();
+      var part = Array.isArray(only) && only.length > 0;
+      var sel = part ? only : batch;
+      clearTimeout(dCloseTimer);
+      dSpin.disabled = true; dSpin.textContent = 'Spinning…'; dNote.textContent = '';
+      /* pick every result first, apply the links, then spin: wheels that were not changed spin normally,
+         changed wheels turn quickly to their forced slice once the others have settled */
+      var nat = batch.map(function(w){
+        if (part && sel.indexOf(w) < 0 && w.nat != null) return w.nat;
+        var f = forcedIdx(w);
+        return f >= 0 ? f : Math.floor(Math.random() * w.options.length);
+      });
+      var plan = applyLinks(batch, nat);
+      var first = [], later = [];
+      batch.forEach(function(w, i){
+        w.nat = nat[i];
+        var rolled = sel.indexOf(w) >= 0;
+        var same = !!w.result && w.cur === plan.idx[i] && w.result.why === plan.why[i];
+        if (!rolled && same) return;                    /* an untouched wheel keeps its result */
+        w.result = null; w.ui.res.textContent = '';
+        ((plan.why[i] || !rolled) ? later : first).push(i);
+      });
+      await Promise.all(first.map(function(i, k){ return sleep(k * 250).then(function(){ return spinOne(batch[i], plan.idx[i], false, ''); }); }));
+      if (batch.some(function(w){ return w.dead; })) return;
+      if (later.length){
+        await sleep(350);
+        await Promise.all(later.map(function(i){ return spinOne(batch[i], plan.idx[i], true, plan.why[i]); }));
+      }
+      if (batch.some(function(w){ return w.dead; })) return;
+      diffResult = batch.map(function(w){ return { group: w.g.name, text: w.result.t, color: w.result.color, why: w.result.why }; });
+      renderSummary();
+      dSpin.disabled = false; dSpin.textContent = 'Spin again';
+      clearTimeout(dCloseTimer);
+      if (debug){
+        dNote.textContent = 'Added to Your run.';          /* stay open so single wheels can be re-rolled */
+      } else {
+        dNote.textContent = 'Added to Your run. Closing…';
+        dCloseTimer = setTimeout(function(){ if (dlg.open) dlg.close(); }, 2000);
+      }
+    } finally {
+      arr.busy = false;
+    }
+  }
+  dSpin.addEventListener('click', function(){ spinDiffs(); });
   document.getElementById('diff-close').addEventListener('click', function(){ dlg.close(); });
   dlg.addEventListener('close', function(){ clearTimeout(dCloseTimer); dWheels.forEach(function(w){ w.dead = true; }); });
   dlg.addEventListener('click', function(e){ if (e.target === dlg) dlg.close(); });
@@ -1280,6 +1487,8 @@ html,body{margin:0}
   var linkOnEl = document.getElementById('link-on');
   var linkStdEl = document.getElementById('link-std');
   var linkTopEl = document.getElementById('link-top');
+  var linkForceEl = document.getElementById('link-force');
+  var linkLiftEl = document.getElementById('link-lift');
   var linkNeutralEl = document.getElementById('link-neutral');
   var linkBothEl = document.getElementById('link-both');
   function renderLinks(){
@@ -1287,14 +1496,49 @@ html,body{margin:0}
     linkOnEl.checked = links.on;
     linkStdEl.value = links.std;
     linkTopEl.value = links.top.join(', ');
+    linkForceEl.value = links.force.join(', ');
+    linkLiftEl.value = links.lift.join(', ');
     linkNeutralEl.value = links.neutral;
   }
   function readLinks(){
-    links = cleanLinks({ on: linkOnEl.checked, std: linkStdEl.value, top: parseList(linkTopEl.value), neutral: linkNeutralEl.value, both: parseList(linkBothEl.value) });
-    save();
+    links = cleanLinks({ on: linkOnEl.checked, std: linkStdEl.value, top: parseList(linkTopEl.value), force: parseList(linkForceEl.value), lift: parseList(linkLiftEl.value), neutral: linkNeutralEl.value, both: parseList(linkBothEl.value) });
+    diffResult = null; save(); renderSummary();       /* a roll made under the old link settings no longer applies */
   }
-  [linkOnEl, linkStdEl, linkTopEl, linkNeutralEl, linkBothEl].forEach(function(el){
+  [linkOnEl, linkStdEl, linkTopEl, linkForceEl, linkLiftEl, linkNeutralEl, linkBothEl].forEach(function(el){
     el.addEventListener(el === linkOnEl ? 'change' : 'input', readLinks);
+  });
+  /* leaving a field shows what is really in effect: blank names fall back to their defaults, lists are tidied */
+  [linkStdEl, linkTopEl, linkForceEl, linkLiftEl, linkNeutralEl, linkBothEl].forEach(function(el){
+    el.addEventListener('change', renderLinks);
+  });
+
+  /* ---------- debug mode (Konami code) ---------- */
+  var debugBar = document.getElementById('debugbar');
+  function setDebug(on){
+    debug = on;
+    if (!on){ wheels.forEach(function(w){ w.forced = new Set(); }); debugDiff = {}; }
+    debugBar.hidden = !on;
+    wheels.forEach(renderOptions);
+    say(on ? 'Debug mode on' : 'Debug mode off');
+  }
+  document.getElementById('dbg-clear').addEventListener('click', function(){
+    wheels.forEach(function(w){ w.forced = new Set(); }); debugDiff = {};
+    wheels.forEach(renderOptions); say('Pins cleared');
+  });
+  document.getElementById('dbg-exit').addEventListener('click', function(){ setDebug(false); });
+  var KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a','Enter'];
+  var kpos = 0;
+  document.addEventListener('keydown', function(e){
+    var t = e.target, tag = t && t.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)){ kpos = 0; return; }
+    if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+    var k = e.key && e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (k === KONAMI[kpos]){
+      kpos++;
+      if (kpos === KONAMI.length){ kpos = 0; e.preventDefault(); setDebug(!debug); }   /* Enter must not press a focused button */
+    } else {
+      kpos = (k === 'ArrowUp') ? (kpos === 2 ? 2 : 1) : 0;     /* a third Up still leaves "Up Up" typed */
+    }
   });
 
   /* ---------- boot ---------- */
