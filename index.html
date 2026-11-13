@@ -1,6 +1,9 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Terraria Spin Wheels</title>
-<meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pixelify+Sans:wght@500;700&display=swap">
 <style>
 /* Layout: header with grass strip, a "Your run" summary panel, then an auto-fill grid of inventory-style wheel panels.
@@ -40,6 +43,7 @@ body{
 }
 .page{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
 :focus-visible{outline:3px solid var(--torch);outline-offset:2px}
+[hidden]{display:none!important}
 
 /* header */
 .top{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-end;justify-content:space-between}
@@ -86,6 +90,14 @@ h2{margin:0;font:700 20px/1.2 var(--display);letter-spacing:.02em}
 .chip{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;padding:6px 10px 6px 8px;background:var(--slot);
   border:2px solid var(--edge);border-radius:3px;box-shadow:inset 0 0 0 1px var(--panel-hi);font-weight:600;overflow-wrap:anywhere}
 .chip i{flex:none;width:10px;height:10px;border-radius:1px;border:1px solid var(--edge)}
+.chip small{font-weight:500;color:var(--muted);font-size:12px}
+.chip.need{border-color:var(--torch-deep);box-shadow:inset 0 0 0 1px var(--torch)}
+.chip.need i{background:var(--torch)}
+.chip.compat{border-color:var(--panel-hi)}
+.chip.compat i{background:var(--muted)}
+.chip.skip{opacity:.6;border-style:dashed}
+.chip.skip .nm{text-decoration:line-through}
+.note{color:var(--muted);font-size:13px;align-self:center}
 
 /* wheels */
 .wheels{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:20px;align-items:start}
@@ -111,12 +123,41 @@ h2{margin:0;font:700 20px/1.2 var(--display);letter-spacing:.02em}
 .result .hint{color:var(--muted);font-size:13px}
 .opts{border:0;margin:0;padding:12px 0 0;min-width:0;border-top:2px solid var(--edge);display:flex;flex-direction:column;gap:10px}
 .opts h3{margin:0;font:600 12px/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0}
-.optlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:248px;overflow-y:auto;padding-right:2px}
-.optlist li{display:flex;align-items:center;gap:6px}
-.sw{flex:none;width:10px;height:26px;border-radius:2px;border:1px solid var(--edge)}
-input.opt,input.add-in{flex:1;min-width:0;height:36px;padding:0 10px;background:var(--slot);color:var(--text);
+.optlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;padding-right:2px}
+.optlist li{display:flex;flex-direction:column;gap:6px}
+.orow{display:flex;align-items:center;gap:6px}
+/* mod rules */
+.rules-panel{background:var(--panel);border:2px solid var(--edge);border-radius:4px;
+  box-shadow:inset 0 0 0 2px var(--panel-hi),0 4px 0 var(--edge);padding:16px 18px}
+.rules-panel summary{cursor:pointer;font:700 20px/1.2 var(--display);letter-spacing:.02em}
+.rules-body{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+.rules-help{margin:0;color:var(--muted);max-width:72ch}
+.rule-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.rule{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;gap:6px 10px;align-items:end;padding:10px;
+  background:var(--slot);border:2px solid var(--edge);border-radius:3px;box-shadow:inset 0 0 0 1px var(--panel-hi)}
+.rule.active{border-color:var(--torch-deep);box-shadow:inset 0 0 0 1px var(--torch)}
+.rule.active::after{content:"Active in this run";grid-column:1/-1;font:600 12px/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--torch)}
+.rule.cancelled::after{content:"Cancelled by your cancel list";grid-column:1/-1;font:600 12px/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rule .hard{grid-column:1/-1}
+.rf{display:flex;flex-direction:column;gap:4px;min-width:0}
+.rf label{font:600 12px/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input.r-in{width:100%;min-width:0;height:36px;padding:0 10px;background:var(--panel);color:var(--text);
   border:2px solid var(--edge);border-radius:3px;font:500 14px var(--body)}
-input.opt:focus,input.add-in:focus{outline:none;border-color:var(--torch)}
+input.r-in:focus{outline:none;border-color:var(--torch)}
+input.r-in.warn{border-color:var(--danger)}
+.arrow{font:700 20px/1 var(--display);color:var(--torch);padding-bottom:8px}
+.rnote{grid-column:1/-1;margin:0;font-size:12px;color:var(--danger)}
+@media (max-width:640px){
+  .rule{grid-template-columns:minmax(0,1fr) auto}
+  .rule .arrow{display:none}
+  .rule .rf.if{grid-column:1;grid-row:1}
+  .rule .rm{grid-column:2;grid-row:1}
+  .rule .rf.add{grid-column:1/-1;grid-row:2}
+}
+.sw{flex:none;width:10px;height:26px;border-radius:2px;border:1px solid var(--edge)}
+input.opt,input.add-in,input.req-in{flex:1;min-width:0;height:36px;padding:0 10px;background:var(--slot);color:var(--text);
+  border:2px solid var(--edge);border-radius:3px;font:500 14px var(--body)}
+input.opt:focus,input.add-in:focus,input.req-in:focus{outline:none;border-color:var(--torch)}
 input.add-in::placeholder{color:var(--muted);opacity:.8}
 .addrow{display:flex;gap:8px}
 .opts:disabled .btn,.opts:disabled input{opacity:.55}
@@ -125,6 +166,37 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
   padding:18px 0 max(14px,env(safe-area-inset-bottom,0px));
   background:linear-gradient(rgba(13,18,48,0),var(--night) 45%)}
 .btn.big{min-height:54px;padding:0 28px;width:min(100%,440px);font:700 19px/1 var(--display);letter-spacing:.02em}
+/* difficulty switch, editor and window */
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer;position:relative}
+.switch input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.switch .track{flex:none;width:36px;height:20px;border-radius:3px;background:var(--slot);border:2px solid var(--edge);position:relative;transition:background .12s}
+.switch .track::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:1px;background:var(--muted);transition:transform .12s}
+.switch input:checked+.track{background:var(--torch-deep)}
+.switch input:checked+.track::after{transform:translateX(16px);background:var(--torch)}
+.switch input:focus-visible+.track{outline:3px solid var(--torch);outline-offset:2px}
+.switch:has(input:checked){color:var(--text)}
+.dgroup{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px 10px;align-items:end;padding:10px;
+  background:var(--slot);border:2px solid var(--edge);border-radius:3px;box-shadow:inset 0 0 0 1px var(--panel-hi)}
+.dgroup .op{grid-column:1/-1}
+.dlg{padding:0;border:2px solid var(--edge);border-radius:4px;background:var(--panel);color:var(--text);
+  width:min(720px,calc(100% - 32px));max-height:calc(100% - 32px);overflow:auto;box-shadow:inset 0 0 0 2px var(--panel-hi),0 8px 0 var(--edge)}
+.dlg::backdrop{background:rgba(8,11,36,.8)}
+.dlg-body{padding:18px;display:flex;flex-direction:column;gap:14px}
+.dlg-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.dlg-sub{margin:0;color:var(--muted);font-size:13px}
+.dlg-wheels{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:18px}
+.dwheel{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;text-align:center}
+.dwheel h3{margin:0;font:700 16px/1.2 var(--display);overflow-wrap:anywhere}
+.dlg .stage{max-width:230px}
+.dres{display:flex;justify-content:center;min-height:38px}
+.dlg-foot{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+@media (max-width:640px){
+  .dgroup{grid-template-columns:minmax(0,1fr) auto}
+  .dgroup .nm{grid-column:1;grid-row:1}
+  .dgroup .rm{grid-column:2;grid-row:1}
+  .dgroup .nd{grid-column:1/-1;grid-row:2}
+  .dgroup .op{grid-column:1/-1;grid-row:3}
+}
 .foot{color:var(--muted);font-size:13px;margin:0}
 @media (max-width:520px){
   .toolbar{width:100%}
@@ -132,9 +204,11 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
   .run-list{grid-template-columns:1fr;gap:4px}
   .run-k{margin-top:6px}
 }
-@media (prefers-reduced-motion:reduce){.btn{transition:none}}
+@media (prefers-reduced-motion:reduce){.btn,.switch .track,.switch .track::after{transition:none}}
+html,body{margin:0}
 </style>
-
+</head>
+<body>
 <div class="page">
   <header>
     <div class="top">
@@ -154,6 +228,7 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
       <h2 id="run-h">Your run</h2>
       <div class="run-actions">
         <span id="status" role="status"></span>
+        <label class="switch" for="diff-on"><input type="checkbox" id="diff-on" checked><span class="track" aria-hidden="true"></span><span>Mod difficulty roll</span></label>
         <button class="btn sm" id="copy" type="button" disabled>Copy run</button>
       </div>
     </div>
@@ -167,6 +242,28 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
     <div class="empty" id="empty" hidden>No wheels yet. Use Add wheel to make one, or reset to the starter set.</div>
   </main>
 
+  <details class="rules-panel" open>
+    <summary>Mod rules</summary>
+    <div class="rules-body">
+      <p class="rules-help">When every comma-separated item in "If rolled" has been rolled on any wheel, the mods in "Add mods" join your run. Use | for "or", so <b>Bard | Healer, Calamity Mod</b> means (Bard or Healer) and Calamity Mod. Names must match an option exactly (capitals don't matter). Mods added by one rule count as rolled for the others. Tick "Always required" for mods a class can't run without; the cancel list leaves those in place and only waives the rest as compat mods.</p>
+      <ul class="rule-list" id="rule-list"></ul>
+      <div><button class="btn sm" id="add-rule" type="button">Add rule</button></div>
+      <div class="rf">
+        <label for="cancel-in">Cancel compat rules when one of these is rolled</label>
+        <input class="r-in" id="cancel-in" maxlength="240" placeholder="e.g. No compat mods">
+      </div>
+    </div>
+  </details>
+
+  <details class="rules-panel" id="diff-panel">
+    <summary>Mod difficulties</summary>
+    <div class="rules-body">
+      <p class="rules-help">Each wheel here joins the difficulty window, which opens after Spin all while "Mod difficulty roll" is on in Your run. A wheel only appears when its mod is in the run, either rolled or added by a rule. Leave the mod field blank to always include the wheel.</p>
+      <ul class="rule-list" id="diff-list"></ul>
+      <div><button class="btn sm" id="add-diff" type="button">Add difficulty wheel</button></div>
+    </div>
+  </details>
+
   <div class="dock">
     <button class="btn primary big" id="spin-all" type="button">Spin all wheels</button>
   </div>
@@ -176,6 +273,21 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
     <button class="btn ghost sm danger" id="reset" type="button">Reset to starter wheels</button>
   </p>
 </div>
+
+<dialog class="dlg" id="diff-dlg" aria-labelledby="diff-title">
+  <div class="dlg-body">
+    <div class="dlg-head">
+      <h2 id="diff-title">Mod difficulty roll</h2>
+      <button class="btn ghost sm" id="diff-close" type="button">Close</button>
+    </div>
+    <p class="dlg-sub" id="diff-sub"></p>
+    <div class="dlg-wheels" id="diff-wheels"></div>
+    <div class="dlg-foot">
+      <button class="btn primary" id="diff-spin" type="button">Spin</button>
+      <span class="note" id="diff-note"></span>
+    </div>
+  </div>
+</dialog>
 
 <script>
 (function(){
@@ -195,6 +307,11 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
   var resetBtn = document.getElementById('reset');
 
   var wheels = [];
+  var rules = [];
+  var cancel = [];
+  var diffs = [];
+  var diffOn = true;
+  var diffResult = null;
   var seq = 0;
 
   function mod(a, m){ return ((a % m) + m) % m; }
@@ -212,11 +329,72 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
     return [
       { title: 'Class', picks: 1, options: ['Melee','Ranger','Mage','Summoner','Rogue','Bard','Healer','Thrower'] },
       { title: 'Mods', picks: 2, options: ['Calamity Mod','Thorium Mod',"Fargo's Souls",'Spirit Mod','Redemption','Stars Above','Secrets of the Shadows','Starlight River'] },
-      { title: 'Handicap', picks: 1, options: ['No armor','No healing potions','No grappling hook','No wings or mounts','Max 3 accessories','No buff potions','One life (Hardcore)','No recall or mirrors','Weapons from loot only'] }
+      { title: 'Difficulty', picks: 1, options: ['Expert','Master','Legendary'] },
+      { title: 'Handicap', picks: 1, options: ['No armor','No healing potions','No grappling hook','No wings or mounts','Max 3 accessories','No buff potions','One life (Hardcore)','No recall or mirrors','Weapons from loot only','No magic storage','Autopause always off','No compat mods'] }
     ];
   }
+  function starterRules(){
+    /* "|" inside a term means "or"; commas between terms mean "and". hard rules ignore the cancel list. */
+    return [
+      { if: ['Bard | Healer | Thrower'], add: ['Thorium Mod'], hard: true },
+      { if: ['Rogue'], add: ['Calamity Mod'], hard: true },
+      { if: ['Bard | Healer','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer Compat'], hard: false },
+      { if: ['Bard | Healer',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer Compat'], hard: false },
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false }
+    ];
+  }
+  function starterDiffs(){
+    return [
+      { name: 'Calamity difficulty', needs: 'Calamity Mod', options: ['Revengeance','Death','Malice'] },
+      { name: "Fargo's Souls difficulty", needs: "Fargo's Souls", options: ['Eternity','Masochist'] }
+    ];
+  }
+  function cleanDiffs(a){
+    return Array.isArray(a) ? a.slice(0, 12).map(function(g){
+      return { name: String((g && g.name) || 'Difficulty').slice(0, 60), needs: String((g && g.needs) || '').slice(0, 60), options: cleanList(g && g.options) };
+    }) : [];
+  }
+  /* One-time upgrades for saved wheels: an unedited Handicap list gains the new standard handicaps,
+     and saves from before the Difficulty wheel existed get one (before Handicap). */
+  function upgradeWheels(ws, v){
+    var prevHandicap = ['No armor','No healing potions','No grappling hook','No wings or mounts','Max 3 accessories','No buff potions','One life (Hardcore)','No recall or mirrors','Weapons from loot only','No compat mods'];
+    ws.forEach(function(w){
+      if (w && w.title === 'Handicap' && Array.isArray(w.options) && JSON.stringify(w.options) === JSON.stringify(prevHandicap)){
+        w.options = w.options.slice(0, -1).concat(['No magic storage','Autopause always off','No compat mods']);
+      }
+    });
+    if (v < 3 && !ws.some(function(w){ return w && w.title === 'Difficulty'; })){
+      var d = { title: 'Difficulty', picks: 1, options: ['Expert','Master','Legendary'] };
+      var hi = ws.findIndex(function(w){ return w && w.title === 'Handicap'; });
+      if (hi < 0) ws.push(d); else ws.splice(hi, 0, d);
+    }
+    return ws;
+  }
+  /* the previous starter set, so an unedited saved copy upgrades to the current one */
+  function previousStarterRules(){
+    return [
+      { if: ['Bard'], add: ['Thorium Mod'] },
+      { if: ['Calamity Mod','Bard'], add: ['Thorium Mod','Helheim','Calamity Bard & Healer Compat'] },
+      { if: ['Thrower'], add: ['Thorium Mod'] },
+      { if: ['Rogue'], add: ['Calamity Mod'] },
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'] }
+    ];
+  }
+  function migrateRules(rs){
+    return JSON.stringify(rs) === JSON.stringify(cleanRules(previousStarterRules())) ? starterRules() : rs;
+  }
+  function parseList(v){ return String(v).split(',').map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 12); }
+  function cleanList(a){ return Array.isArray(a) ? a.map(function(x){ return String(x).trim().slice(0, 60); }).filter(Boolean).slice(0, 12) : []; }
+  function cleanRules(a){
+    return Array.isArray(a) ? a.slice(0, 40).map(function(r){
+      return { if: cleanList(r && r.if), add: cleanList(r && r.add), hard: !!(r && r.hard) };
+    }) : [];
+  }
   function make(d){
-    var opts = Array.isArray(d.options) ? d.options.map(String).filter(function(s){ return s.trim(); }).slice(0, MAX_OPTS) : [];
+    var opts = Array.isArray(d.options) ? d.options.map(function(s){
+      var o = (s && typeof s === 'object') ? s : { t: s };
+      return { t: String(o.t == null ? '' : o.t).slice(0, 60) };
+    }).filter(function(o){ return o.t.trim(); }).slice(0, MAX_OPTS) : [];
     var picks = parseInt(d.picks, 10); if (!(picks >= 1)) picks = 1; if (picks > 12) picks = 12;
     return {
       id: 'w' + (++seq),
@@ -228,17 +406,50 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
   }
   function save(){
     try {
-      localStorage.setItem(STORE, JSON.stringify(wheels.map(function(w){
-        return { title: w.title, options: w.options, picks: w.picks, locked: w.locked };
-      })));
+      localStorage.setItem(STORE, JSON.stringify({
+        v: 3,
+        wheels: wheels.map(function(w){
+          return { title: w.title, options: w.options.map(function(o){ return o.t; }), picks: w.picks, locked: w.locked };
+        }),
+        rules: rules, cancel: cancel, diffs: diffs, diffOn: diffOn
+      }));
     } catch (e) {}
+    markRules();
   }
   function load(){
     try {
       var raw = localStorage.getItem(STORE);
       if (!raw) return null;
       var a = JSON.parse(raw);
-      return Array.isArray(a) ? a : null;
+      if (a && Array.isArray(a.wheels)){
+        return {
+          wheels: upgradeWheels(a.wheels, a.v || 2),
+          rules: Array.isArray(a.rules) ? migrateRules(cleanRules(a.rules)) : starterRules(),
+          cancel: Array.isArray(a.cancel) ? cleanList(a.cancel) : ['No compat mods'],
+          diffs: Array.isArray(a.diffs) ? cleanDiffs(a.diffs) : starterDiffs(),
+          diffOn: a.diffOn !== false
+        };
+      }
+      if (Array.isArray(a)){
+        /* older saves held only wheels; per-option requirements become rules */
+        var rs = [], cn = [];
+        a.forEach(function(w){
+          (w && Array.isArray(w.options) ? w.options : []).forEach(function(o){
+            if (o && typeof o === 'object'){
+              if (o.req && o.req.length) rs.push({ if: [o.t], add: o.req });
+              if (o.waive) cn.push(o.t);
+            }
+          });
+        });
+        return {
+          wheels: upgradeWheels(a, 1),
+          rules: rs.length ? cleanRules(rs) : starterRules(),
+          cancel: cn.length ? cleanList(cn) : ['No compat mods'],
+          diffs: starterDiffs(),
+          diffOn: true
+        };
+      }
+      return null;
     } catch (e) { return null; }
   }
 
@@ -282,7 +493,9 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
       ctx.rotate(s + a / 2);
       ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
       ctx.font = '700 ' + fs + 'px Inter, system-ui, sans-serif';
-      var label = fit(ctx, w.options[i] || '…', R * 0.72);
+      var raw = w.options[i].t || '…', maxW = R * 0.72, f = fs;
+      while (f > 10 && ctx.measureText(raw).width > maxW){ f -= 1; ctx.font = '700 ' + f + 'px Inter, system-ui, sans-serif'; }
+      var label = fit(ctx, raw, maxW);
       ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(8,11,36,.55)';
       ctx.strokeText(label, R - 20, 0);
       ctx.fillStyle = w.picked.has(i) ? 'rgba(238,241,255,.6)' : '#fff';
@@ -347,14 +560,16 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
   function renderOptions(w){
     var ul = w.ui.list, n = w.options.length;
     ul.textContent = '';
-    w.options.forEach(function(t, i){
+    w.options.forEach(function(o, i){
       var li = document.createElement('li'); li.dataset.i = i;
+      var row = document.createElement('div'); row.className = 'orow';
       var sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = colorFor(i, n);
-      var inp = document.createElement('input'); inp.className = 'opt'; inp.value = t; inp.maxLength = 60;
+      var inp = document.createElement('input'); inp.className = 'opt'; inp.value = o.t; inp.maxLength = 60;
       inp.id = w.id + '-opt-' + i; inp.setAttribute('aria-label', 'Option ' + (i + 1));
       var x = document.createElement('button'); x.type = 'button'; x.className = 'btn ghost sm sq'; x.dataset.act = 'rm';
       x.setAttribute('aria-label', 'Remove option ' + (i + 1)); x.textContent = '×';
-      li.appendChild(sw); li.appendChild(inp); li.appendChild(x);
+      row.appendChild(sw); row.appendChild(inp); row.appendChild(x);
+      li.appendChild(row);
       ul.appendChild(li);
     });
     w.ui.count.textContent = n;
@@ -391,10 +606,118 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
   }
 
   /* ---------- summary ---------- */
+  function norm(s){ return String(s).trim().toLowerCase(); }
+  /* A term is satisfied when any of its "|" alternatives is rolled (or already added by a rule). */
+  function termHit(term, have){
+    var alts = term.split('|');
+    for (var i = 0; i < alts.length; i++) if (alts[i].trim() && have[norm(alts[i])]) return alts[i].trim();
+    return null;
+  }
+  /* Fires the given rules until nothing new is added. Mods already rolled are never listed. */
+  function fire(list, rolled){
+    var have = {}, map = {}, items = [], active = [], changed, guard = 0;
+    Object.keys(rolled).forEach(function(k){ have[k] = true; });
+    do {
+      changed = false;
+      list.forEach(function(x){
+        var rule = x.rule;
+        if (!rule.if.length || !rule.add.length) return;
+        var hits = [];
+        for (var t = 0; t < rule.if.length; t++){
+          var h = termHit(rule.if[t], have);
+          if (!h) return;
+          hits.push(h);
+        }
+        if (active.indexOf(x.i) < 0) active.push(x.i);
+        var label = hits.join(' + ');
+        rule.add.forEach(function(name){
+          var key = norm(name);
+          if (!key || rolled[key]) return;
+          var e = map[key];
+          if (!e){ e = map[key] = { text: name.trim(), by: [] }; items.push(e); have[key] = true; changed = true; }
+          if (e.by.indexOf(label) < 0) e.by.push(label);
+        });
+      });
+    } while (changed && ++guard < 10);
+    return { items: items, map: map, active: active };
+  }
+  /* hard = from rules marked "can't be cancelled"; soft = everything else, waived by the cancel list. */
+  function computeReq(){
+    var rolled = {}, names = [];
+    wheels.forEach(function(w){ w.result.forEach(function(r){ rolled[norm(r.text)] = true; names.push(r.text); }); });
+    var waivers = names.filter(function(n){ return cancel.some(function(c){ return norm(c) === norm(n); }); });
+    var all = rules.map(function(r, i){ return { rule: r, i: i }; });
+    var full = fire(all, rolled);
+    var hardOnly = fire(all.filter(function(x){ return x.rule.hard; }), rolled);
+    var soft = full.items.filter(function(e){ return !hardOnly.map[norm(e.text)]; });
+    var cancelled = waivers.length ? full.active.filter(function(i){ return !rules[i].hard; }) : [];
+    /* everything that is part of the run right now: rolled, plus mods added by rules that aren't waived */
+    var present = {};
+    Object.keys(rolled).forEach(function(k){ present[k] = true; });
+    hardOnly.items.forEach(function(e){ present[norm(e.text)] = true; });
+    if (!waivers.length) soft.forEach(function(e){ present[norm(e.text)] = true; });
+    return { hard: hardOnly.items, soft: soft, waivers: waivers, active: full.active, cancelled: cancelled, present: present };
+  }
+  function markRules(q){
+    var ul = document.getElementById('rule-list'); if (!ul) return;
+    q = q || computeReq();
+    var known = {};
+    wheels.forEach(function(w){ w.options.forEach(function(o){ known[norm(o.t)] = true; }); });
+    rules.forEach(function(r){ r.add.forEach(function(n){ known[norm(n)] = true; }); });
+    Array.prototype.forEach.call(ul.children, function(li, i){
+      var r = rules[i]; if (!r) return;
+      var isCancelled = q.cancelled.indexOf(i) >= 0;
+      li.classList.toggle('cancelled', isCancelled);
+      li.classList.toggle('active', q.active.indexOf(i) >= 0 && !isCancelled);
+      var bad = [];
+      r.if.forEach(function(term){
+        term.split('|').forEach(function(n){ if (n.trim() && !known[norm(n)]) bad.push(n.trim()); });
+      });
+      li.querySelector('.r-if').classList.toggle('warn', bad.length > 0);
+      var note = li.querySelector('.rnote');
+      note.hidden = !bad.length;
+      note.textContent = bad.length ? 'No option named ' + bad.join(', ') + ' on any wheel yet.' : '';
+    });
+  }
+  function renderRules(){
+    var ul = document.getElementById('rule-list'); ul.textContent = '';
+    rules.forEach(function(r, i){
+      var li = document.createElement('li'); li.className = 'rule'; li.dataset.i = i;
+      li.innerHTML =
+        '<div class="rf if"><label for="rif-' + i + '">If rolled (all of)</label><input class="r-in r-if" id="rif-' + i + '" maxlength="240" placeholder="e.g. Bard | Healer, Calamity Mod"></div>' +
+        '<span class="arrow" aria-hidden="true">→</span>' +
+        '<div class="rf add"><label for="radd-' + i + '">Add mods</label><input class="r-in r-add" id="radd-' + i + '" maxlength="240" placeholder="e.g. Thorium Mod, Helheim"></div>' +
+        '<button class="btn ghost sm sq rm" type="button" data-rule="rm" aria-label="Remove rule ' + (i + 1) + '">×</button>' +
+        '<label class="lock hard" for="rhard-' + i + '"><input type="checkbox" class="r-hard" id="rhard-' + i + '"> Always required (cancel list can’t remove these mods)</label>' +
+        '<p class="rnote" hidden></p>';
+      li.querySelector('.r-hard').checked = !!r.hard;
+      li.querySelector('.r-if').value = r.if.join(', ');
+      li.querySelector('.r-add').value = r.add.join(', ');
+      ul.appendChild(li);
+    });
+    document.getElementById('cancel-in').value = cancel.join(', ');
+    markRules();
+  }
+  function needChip(e, kind, skipped){
+    var s = document.createElement('span'); s.className = 'chip ' + (skipped ? 'skip' : kind);
+    s.title = 'Needed by ' + e.by.join(', ');
+    var i = document.createElement('i'); s.appendChild(i);
+    var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = e.text; s.appendChild(nm);
+    var sm = document.createElement('small'); sm.textContent = 'for ' + e.by.join(', '); s.appendChild(sm);
+    return s;
+  }
   function runText(){
-    return wheels.filter(function(w){ return w.result.length; }).map(function(w){
+    var lines = wheels.filter(function(w){ return w.result.length; }).map(function(w){
       return (w.title || 'Untitled') + ': ' + w.result.map(function(r){ return r.text; }).join(', ');
-    }).join('\n');
+    });
+    var q = computeReq();
+    if (diffOn && diffResult) lines.push('Mod difficulty: ' + diffResult.map(function(r){ return r.text; }).join(', '));
+    var txt = function(e){ return e.text; };
+    if (q.hard.length) lines.push('Required mods: ' + q.hard.map(txt).join(', '));
+    if (q.soft.length) lines.push(q.waivers.length
+      ? 'Compat mods: waived by ' + q.waivers.join(', ')
+      : 'Compat mods: ' + q.soft.map(txt).join(', '));
+    return lines.join('\n');
   }
   function renderSummary(){
     var done = wheels.filter(function(w){ return w.result.length; });
@@ -408,6 +731,32 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
       w.result.forEach(function(r){ v.appendChild(chip(r)); });
       runList.appendChild(k); runList.appendChild(v);
     });
+    var ad = activeDiffs();
+    if (diffOn && done.length && ad.act.length){
+      var dk = document.createElement('div'); dk.className = 'run-k'; dk.textContent = 'Mod difficulty';
+      var dv = document.createElement('div'); dv.className = 'run-v';
+      (diffResult || []).forEach(function(r){ dv.appendChild(diffChip(r)); });
+      var db = document.createElement('button'); db.type = 'button'; db.dataset.diff = '1';
+      db.className = 'btn sm' + (diffResult ? ' ghost' : ''); db.textContent = diffResult ? 'Re-roll' : 'Roll difficulty';
+      dv.appendChild(db);
+      runList.appendChild(dk); runList.appendChild(dv);
+    }
+    var q = computeReq();
+    var row = function(label, items, kind, waived){
+      if (!items.length) return;
+      var rk = document.createElement('div'); rk.className = 'run-k'; rk.textContent = label;
+      var rv = document.createElement('div'); rv.className = 'run-v';
+      items.forEach(function(e){ rv.appendChild(needChip(e, kind, waived)); });
+      if (waived){
+        var note = document.createElement('span'); note.className = 'note';
+        note.textContent = 'Waived by ' + q.waivers.join(', ');
+        rv.appendChild(note);
+      }
+      runList.appendChild(rk); runList.appendChild(rv);
+    };
+    row('Required mods', q.hard, 'need', false);
+    row('Compat mods', q.soft, 'compat', q.waivers.length > 0);
+    markRules(q);
   }
   var statusTimer;
   function say(msg){
@@ -446,7 +795,7 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
   }
   async function spinWheel(w){
     if (w.spinning || w.dead || !w.options.length) return;
-    w.spinning = true; w.result = []; w.picked = new Set();
+    w.spinning = true; w.result = []; w.picked = new Set(); diffResult = null;
     setSpinUI(w); renderResult(w); busy(); draw(w);
     var total = Math.min(w.picks, w.options.length);
     for (var k = 0; k < total; k++){
@@ -466,7 +815,7 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
       if (w.dead) return;
       w.rot = mod(w.rot, TAU);
       w.picked.add(idx);
-      w.result.push({ text: w.options[idx] || '…', color: colorFor(idx, n) });
+      w.result.push({ text: w.options[idx].t || '…', color: colorFor(idx, n) });
       renderResult(w); draw(w);
       if (k < total - 1) await sleep(rm ? 200 : 500);
     }
@@ -476,7 +825,10 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
     var list = wheels.filter(function(w){ return !w.locked && !w.spinning && w.options.length; });
     if (!list.length){ say('No wheels to spin'); return; }
     spinAllBtn.disabled = true;
-    list.forEach(function(w, i){ sleep(i * 220).then(function(){ spinWheel(w); }); });
+    var jobs = list.map(function(w, i){ return sleep(i * 220).then(function(){ return spinWheel(w); }); });
+    Promise.all(jobs).then(function(){
+      if (diffOn && !dlg.open && activeDiffs().act.length) setTimeout(function(){ openDifficulty(true); }, 500);
+    });
   }
   spinAllBtn.addEventListener('click', spinAll);
 
@@ -509,7 +861,7 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
     var added = false;
     lines.forEach(function(l){
       l = l.trim().slice(0, 60);
-      if (l && w.options.length < MAX_OPTS){ w.options.push(l); added = true; }
+      if (l && w.options.length < MAX_OPTS){ w.options.push({ t: l }); added = true; }
     });
     if (!added) return;
     w.picked = new Set();
@@ -544,7 +896,7 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
     var t = e.target, card = t.closest('.wheel'); var w = card && byId(card.dataset.id); if (!w) return;
     if (t.classList.contains('title')){ w.title = t.value; save(); renderSummary(); }
     else if (t.classList.contains('opt')){
-      w.options[+t.closest('li').dataset.i] = t.value; draw(w); save();
+      w.options[+t.closest('li').dataset.i].t = t.value; draw(w); save();
     }
   });
   grid.addEventListener('change', function(e){
@@ -574,6 +926,34 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
 
   document.getElementById('add-wheel').addEventListener('click', addWheel);
 
+  var ruleList = document.getElementById('rule-list');
+  ruleList.addEventListener('input', function(e){
+    var t = e.target, li = t.closest('li'); if (!li) return;
+    var r = rules[+li.dataset.i]; if (!r) return;
+    if (t.classList.contains('r-if')) r.if = parseList(t.value);
+    else if (t.classList.contains('r-add')) r.add = parseList(t.value);
+    else return;
+    save(); renderSummary();
+  });
+  ruleList.addEventListener('change', function(e){
+    var t = e.target; if (!t.classList.contains('r-hard')) return;
+    var r = rules[+t.closest('li').dataset.i]; if (!r) return;
+    r.hard = t.checked; save(); renderSummary();
+  });
+  ruleList.addEventListener('click', function(e){
+    var b = e.target.closest('[data-rule="rm"]'); if (!b) return;
+    rules.splice(+b.closest('li').dataset.i, 1);
+    renderRules(); save(); renderSummary();
+  });
+  document.getElementById('add-rule').addEventListener('click', function(){
+    rules.push({ if: [], add: [], hard: false });
+    renderRules(); save();
+    var last = ruleList.lastElementChild; if (last) last.querySelector('.r-if').focus();
+  });
+  document.getElementById('cancel-in').addEventListener('input', function(e){
+    cancel = parseList(e.target.value); save(); renderSummary();
+  });
+
   var resetTimer;
   resetBtn.addEventListener('click', function(){
     if (!resetBtn.classList.contains('confirm')){
@@ -587,17 +967,143 @@ input.add-in::placeholder{color:var(--muted);opacity:.8}
     grid.textContent = '';
     wheels = starter().map(make);
     wheels.forEach(function(w){ mount(w); });
+    rules = starterRules(); cancel = ['No compat mods']; renderRules();
+    diffs = starterDiffs(); diffOn = true; diffResult = null; diffOnEl.checked = true; renderDiffs();
     save(); updateEmpty(); renderSummary(); busy();
   });
 
+  /* ---------- mod difficulty roll (pop-up window) ---------- */
+  var dlg = document.getElementById('diff-dlg');
+  var dSpin = document.getElementById('diff-spin');
+  var dNote = document.getElementById('diff-note');
+  var dWheels = [];
+
+  /* groups whose mod is in the run (or that have no mod set); the rest are reported as skipped */
+  function activeDiffs(){
+    var q = computeReq(), act = [], skipped = [];
+    diffs.forEach(function(g){
+      if (!g.options.length) return;
+      var ok = !g.needs.trim() || !!termHit(g.needs, q.present);
+      (ok ? act : skipped).push(g);
+    });
+    return { act: act, skipped: skipped };
+  }
+  function diffChip(r){
+    var s = chip({ text: r.text, color: r.color });
+    var sm = document.createElement('small'); sm.textContent = r.group; s.appendChild(sm);
+    return s;
+  }
+  function openDifficulty(auto){
+    if (dlg.open) return;
+    var a = activeDiffs();
+    if (!a.act.length) return;
+    var box = document.getElementById('diff-wheels'); box.textContent = '';
+    dWheels = a.act.map(function(g){
+      var card = document.createElement('div'); card.className = 'dwheel';
+      card.innerHTML = '<h3></h3><div class="stage"><canvas></canvas><div class="pointer" aria-hidden="true"></div></div><div class="dres" aria-live="polite"></div>';
+      card.querySelector('h3').textContent = g.name;
+      box.appendChild(card);
+      var canvas = card.querySelector('canvas'); canvas.setAttribute('aria-label', g.name + ' wheel');
+      var dw = { g: g, options: g.options.map(function(t){ return { t: t }; }), rot: Math.random() * TAU,
+        picked: new Set(), dead: false, spinning: false, result: null, ui: { canvas: canvas, res: card.querySelector('.dres') } };
+      if (window.ResizeObserver) new ResizeObserver(function(){ draw(dw); }).observe(canvas);
+      return dw;
+    });
+    var sub = 'Wheels for the mods in your run.';
+    if (a.skipped.length) sub += ' Skipped: ' + a.skipped.map(function(g){ return g.name + ' (' + (g.needs || 'no mod') + ' is not in this run)'; }).join(', ') + '.';
+    document.getElementById('diff-sub').textContent = sub;
+    dNote.textContent = ''; dSpin.disabled = false; dSpin.textContent = 'Spin';
+    if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+    requestAnimationFrame(function(){ dWheels.forEach(draw); });
+    if (auto) setTimeout(spinDiffs, 450);
+  }
+  async function spinOne(w){
+    w.spinning = true;
+    var n = w.options.length, idx = Math.floor(Math.random() * n), a = TAU / n;
+    var jitter = (Math.random() - 0.5) * a * 0.7;
+    var want = mod(-((idx + 0.5) * a + jitter), TAU), delta = mod(want - mod(w.rot, TAU), TAU);
+    var rm = reduced(), extra = rm ? 0 : 5 + Math.floor(Math.random() * 2), dur = rm ? 450 : 3800 + Math.random() * 700;
+    await animateTo(w, w.rot + delta + extra * TAU, dur);
+    w.spinning = false;
+    if (w.dead) return;
+    w.rot = mod(w.rot, TAU);
+    w.result = { t: w.options[idx].t, color: colorFor(idx, n) };
+    draw(w);
+    w.ui.res.textContent = ''; w.ui.res.appendChild(chip({ text: w.result.t, color: w.result.color }));
+  }
+  async function spinDiffs(){
+    if (!dWheels.length || dWheels.some(function(w){ return w.spinning; })) return;
+    var batch = dWheels.slice();
+    dSpin.disabled = true; dSpin.textContent = 'Spinning…'; dNote.textContent = '';
+    batch.forEach(function(w){ w.result = null; w.ui.res.textContent = ''; });
+    await Promise.all(batch.map(function(w, i){ return sleep(i * 250).then(function(){ return spinOne(w); }); }));
+    if (batch.some(function(w){ return w.dead; })) return;
+    diffResult = batch.map(function(w){ return { group: w.g.name, text: w.result.t, color: w.result.color }; });
+    renderSummary();
+    dSpin.disabled = false; dSpin.textContent = 'Spin again'; dNote.textContent = 'Added to Your run.';
+  }
+  dSpin.addEventListener('click', spinDiffs);
+  document.getElementById('diff-close').addEventListener('click', function(){ dlg.close(); });
+  dlg.addEventListener('close', function(){ dWheels.forEach(function(w){ w.dead = true; }); });
+  dlg.addEventListener('click', function(e){ if (e.target === dlg) dlg.close(); });
+  runList.addEventListener('click', function(e){
+    if (e.target.closest('[data-diff]')) openDifficulty(true);
+  });
+  var diffOnEl = document.getElementById('diff-on');
+  diffOnEl.addEventListener('change', function(){ diffOn = diffOnEl.checked; save(); renderSummary(); });
+
+  /* difficulty wheel editor */
+  var diffList = document.getElementById('diff-list');
+  function renderDiffs(){
+    diffList.textContent = '';
+    diffs.forEach(function(g, i){
+      var li = document.createElement('li'); li.className = 'dgroup'; li.dataset.i = i;
+      li.innerHTML =
+        '<div class="rf nm"><label for="dn-' + i + '">Wheel name</label><input class="r-in d-name" id="dn-' + i + '" maxlength="60"></div>' +
+        '<div class="rf nd"><label for="dm-' + i + '">Only when this mod is in the run</label><input class="r-in d-needs" id="dm-' + i + '" maxlength="60" placeholder="blank = always"></div>' +
+        '<button class="btn ghost sm sq rm" type="button" data-diff-rm="1" aria-label="Remove difficulty wheel ' + (i + 1) + '">×</button>' +
+        '<div class="rf op"><label for="do-' + i + '">Options (comma separated)</label><input class="r-in d-opts" id="do-' + i + '" maxlength="240" placeholder="e.g. Revengeance, Death, Malice"></div>';
+      li.querySelector('.d-name').value = g.name;
+      li.querySelector('.d-needs').value = g.needs;
+      li.querySelector('.d-opts').value = g.options.join(', ');
+      diffList.appendChild(li);
+    });
+  }
+  diffList.addEventListener('input', function(e){
+    var t = e.target, li = t.closest('li'); if (!li) return;
+    var g = diffs[+li.dataset.i]; if (!g) return;
+    if (t.classList.contains('d-name')) g.name = t.value.slice(0, 60);
+    else if (t.classList.contains('d-needs')) g.needs = t.value.slice(0, 60);
+    else if (t.classList.contains('d-opts')) g.options = parseList(t.value);
+    else return;
+    diffResult = null; save(); renderSummary();
+  });
+  diffList.addEventListener('click', function(e){
+    var b = e.target.closest('[data-diff-rm]'); if (!b) return;
+    diffs.splice(+b.closest('li').dataset.i, 1);
+    diffResult = null; renderDiffs(); save(); renderSummary();
+  });
+  document.getElementById('add-diff').addEventListener('click', function(){
+    diffs.push({ name: 'New difficulty wheel', needs: '', options: [] });
+    renderDiffs(); save(); renderSummary();
+    var last = diffList.lastElementChild;
+    if (last){ var n = last.querySelector('.d-name'); n.focus(); n.select(); }
+  });
+
   /* ---------- boot ---------- */
-  wheels = (load() || starter()).map(make);
+  var saved = load();
+  wheels = (saved ? saved.wheels : starter()).map(make);
+  rules = saved ? saved.rules : starterRules();
+  cancel = saved ? saved.cancel : ['No compat mods'];
+  diffs = saved ? saved.diffs : starterDiffs();
+  diffOn = saved ? saved.diffOn : true;
+  diffOnEl.checked = diffOn;
   wheels.forEach(function(w){ mount(w); });
-  updateEmpty(); renderSummary(); busy();
+  renderRules(); renderDiffs(); updateEmpty(); renderSummary(); busy();
   if (document.fonts && document.fonts.ready){
     document.fonts.ready.then(function(){ wheels.forEach(draw); });
   }
 })();
 </script>
-
-</body></html>
+</body>
+</html>
