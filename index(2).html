@@ -1,0 +1,1583 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Terraria Spin Wheels</title>
+<meta name="description" content="Let fate pick your Terraria loadout: spin for a class, mods, handicaps and difficulty.">
+<meta name="theme-color" content="#f5a73b">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Terraria Spin Wheels">
+<meta property="og:url" content="https://sh3zb0t.github.io/">
+<meta property="og:title" content="Terraria Spin Wheels">
+<meta property="og:image" content="https://sh3zb0t.github.io/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A pixel-art spinning wheel of Terraria classes beside the title Terraria Spin Wheels.">
+<meta property="og:description" content="Let fate pick your Terraria loadout: spin for a class, mods, handicaps and difficulty.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Terraria Spin Wheels">
+<meta name="twitter:image" content="https://sh3zb0t.github.io/og-image.png">
+<meta name="twitter:image:alt" content="A pixel-art spinning wheel of Terraria classes beside the title Terraria Spin Wheels.">
+<meta name="twitter:description" content="Let fate pick your Terraria loadout: spin for a class, mods, handicaps and difficulty.">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Pixelify+Sans:wght@500;700&display=swap">
+<style>
+/* Layout: header with grass strip, a "Your run" summary panel, then an auto-fill grid of inventory-style wheel panels.
+   Blue inventory panels, torch-orange actions, one committed night-sky look (single theme by choice). */
+:root{
+  --night:#0d1230;
+  --panel:#25327a;
+  --panel-hi:#3646a3;
+  --slot:#161e55;
+  --edge:#080b24;
+  --text:#eef1ff;
+  --muted:#a8b2ea;
+  --torch:#f5a73b;
+  --torch-deep:#a8641a;
+  --torch-ink:#2a1700;
+  --grass:#58b34a;
+  --grass-2:#4a9f3d;
+  --dirt:#7a4a24;
+  --danger:#ff9a90;
+  --display:'Pixelify Sans',ui-monospace,Menlo,monospace;
+  --body:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background-color:var(--night);
+  background-image:
+    radial-gradient(1.5px 1.5px at 24px 40px,rgba(255,255,255,.55),transparent),
+    radial-gradient(1px 1px at 110px 90px,rgba(255,255,255,.4),transparent),
+    radial-gradient(1px 1px at 70px 150px,rgba(255,255,255,.3),transparent);
+  background-size:180px 180px;
+  color:var(--text);
+  font:400 15px/1.45 var(--body);
+  padding-top:max(20px,env(safe-area-inset-top,0px));
+  padding-bottom:48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.page{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+:focus-visible{outline:3px solid var(--torch);outline-offset:2px}
+[hidden]{display:none!important}
+
+/* header */
+.top{display:flex;flex-wrap:wrap;gap:16px 24px;align-items:flex-end;justify-content:space-between}
+.top>div{min-width:0}
+h1{margin:0;font:700 clamp(28px,5.5vw,44px)/1.05 var(--display);letter-spacing:.01em;text-shadow:3px 3px 0 var(--edge);text-wrap:balance}
+.sub{margin:8px 0 0;color:var(--muted);max-width:52ch}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px}
+.grass{height:20px;margin-top:-4px;background:
+  linear-gradient(var(--grass) 0 10px,var(--dirt) 10px);
+  border:2px solid var(--edge);border-radius:2px;position:relative}
+.grass::after{content:"";position:absolute;inset:0 0 auto 0;height:10px;
+  background:repeating-linear-gradient(90deg,var(--grass-2) 0 16px,transparent 16px 32px)}
+
+/* buttons */
+.btn{font:600 14px/1 var(--body);min-height:40px;padding:0 14px;border:2px solid var(--edge);border-radius:4px;
+  background:var(--panel-hi);color:var(--text);cursor:pointer;box-shadow:0 3px 0 var(--edge);transition:transform .06s,filter .12s}
+.btn:hover:not(:disabled){filter:brightness(1.15)}
+.btn:active:not(:disabled){transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.primary{background:var(--torch);color:var(--torch-ink);box-shadow:0 3px 0 var(--torch-deep),0 0 0 0 var(--edge)}
+.btn.primary:active:not(:disabled){box-shadow:0 1px 0 var(--torch-deep)}
+.btn.ghost{background:transparent;box-shadow:none;border-color:transparent;color:var(--muted)}
+.btn.ghost:hover:not(:disabled){background:var(--slot);color:var(--text);filter:none}
+.btn.ghost:active:not(:disabled){transform:none}
+.btn.sm{min-height:32px;padding:0 10px;font-size:13px}
+.btn.danger.confirm{color:var(--torch-ink);background:var(--danger)}
+.btn.danger:hover:not(:disabled){color:var(--danger)}
+.btn.sq{min-width:36px;padding:0}
+.btn.pin.on{background:var(--torch);color:var(--torch-ink);box-shadow:0 3px 0 var(--torch-deep)}
+.debugbar{display:flex;flex-wrap:wrap;gap:8px 12px;align-items:center;padding:10px 14px;background:var(--slot);
+  border:2px solid var(--torch-deep);border-radius:4px;box-shadow:inset 0 0 0 1px var(--torch)}
+.debugbar strong{font:700 16px/1.2 var(--display);color:var(--torch)}
+.debugbar span{flex:1 1 280px;min-width:0;color:var(--muted);font-size:13px}
+.dbg-row{display:flex;gap:8px;width:100%}
+select.dbg-sel{flex:1;min-width:0;height:32px;padding:0 8px;background:var(--panel);color:var(--text);
+  border:2px solid var(--edge);border-radius:3px;font:500 13px var(--body)}
+select.dbg-sel:focus{outline:none;border-color:var(--torch)}
+
+/* run summary */
+.run{background:var(--panel);border:2px solid var(--edge);border-radius:4px;
+  box-shadow:inset 0 0 0 2px var(--panel-hi),0 4px 0 var(--edge);padding:16px 18px;display:flex;flex-direction:column;gap:12px}
+.run-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+h2{margin:0;font:700 20px/1.2 var(--display);letter-spacing:.02em}
+.run-actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+#status{color:var(--torch);font-size:13px;min-height:1em}
+.run-empty{margin:0;color:var(--muted)}
+.run-list{display:grid;grid-template-columns:minmax(90px,max-content) 1fr;gap:10px 16px;align-items:center}
+.run-k{font:600 12px/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);overflow-wrap:anywhere}
+.run-v{display:flex;flex-wrap:wrap;gap:8px;min-width:0}
+#fallback{width:100%;min-height:90px;background:var(--slot);color:var(--text);border:2px solid var(--edge);border-radius:4px;padding:8px;font:13px/1.4 var(--body)}
+
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:100%;padding:6px 10px 6px 8px;background:var(--slot);
+  border:2px solid var(--edge);border-radius:3px;box-shadow:inset 0 0 0 1px var(--panel-hi);font-weight:600;overflow-wrap:anywhere}
+.chip i{flex:none;width:10px;height:10px;border-radius:1px;border:1px solid var(--edge)}
+.chip small{font-weight:500;color:var(--muted);font-size:12px}
+.chip.need{border-color:var(--torch-deep);box-shadow:inset 0 0 0 1px var(--torch)}
+.chip.need i{background:var(--torch)}
+.chip.compat{border-color:var(--panel-hi)}
+.chip.compat i{background:var(--muted)}
+.chip.skip{opacity:.6;border-style:dashed}
+.chip.skip .nm{text-decoration:line-through}
+.note{color:var(--muted);font-size:13px;align-self:center}
+a.chip.packlink{color:var(--text);text-decoration:none;border-color:var(--torch-deep);box-shadow:inset 0 0 0 1px var(--torch)}
+a.chip.packlink:hover{filter:brightness(1.2);text-decoration:underline}
+.chip.warnnote{border-color:var(--danger);box-shadow:inset 0 0 0 1px var(--danger)}
+.chip.warnnote i{background:var(--danger)}
+.chip.warnnote small{color:var(--danger)}
+
+/* wheels */
+.wheels{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,340px),1fr));gap:20px;align-items:start}
+.wheel{background:var(--panel);border:2px solid var(--edge);border-radius:4px;
+  box-shadow:inset 0 0 0 2px var(--panel-hi),0 4px 0 var(--edge);padding:14px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.wh{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;justify-content:space-between}
+.title{flex:1 1 140px;min-width:0;font:700 22px/1.2 var(--display);color:var(--text);background:transparent;border:0;border-bottom:2px dashed transparent;padding:4px 2px}
+.title:hover{border-bottom-color:var(--panel-hi)}
+.title:focus{outline:none;border-bottom-color:var(--torch)}
+.wh-actions{display:flex;gap:2px}
+.stage{position:relative;width:100%;max-width:320px;margin:6px auto 0}
+.stage canvas{display:block;width:100%;aspect-ratio:1;height:auto;cursor:pointer}
+.pointer{position:absolute;left:50%;top:-6px;transform:translateX(-50%);width:0;height:0;
+  border-left:13px solid transparent;border-right:13px solid transparent;border-top:26px solid var(--torch);
+  filter:drop-shadow(0 2px 0 var(--edge)) drop-shadow(0 0 1px var(--edge));pointer-events:none}
+.controls{display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center}
+.controls .primary{min-width:104px}
+.picks{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--muted)}
+.picks output{min-width:2ch;text-align:center;color:var(--text);font-weight:700;font-variant-numeric:tabular-nums}
+.lock{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--muted);cursor:pointer}
+.lock input{width:16px;height:16px;accent-color:var(--torch)}
+.result{display:flex;flex-wrap:wrap;gap:8px;min-height:40px;align-items:center}
+.result .hint{color:var(--muted);font-size:13px}
+.opts{border:0;margin:0;padding:12px 0 0;min-width:0;border-top:2px solid var(--edge);display:flex;flex-direction:column;gap:10px}
+.opts h3{margin:0;font:600 12px/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:0}
+.optlist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;max-height:320px;overflow-y:auto;padding-right:2px}
+.optlist li{display:flex;flex-direction:column;gap:6px}
+.orow{display:flex;align-items:center;gap:6px}
+/* mod rules */
+.rules-panel{background:var(--panel);border:2px solid var(--edge);border-radius:4px;
+  box-shadow:inset 0 0 0 2px var(--panel-hi),0 4px 0 var(--edge);padding:16px 18px}
+.rules-panel summary{cursor:pointer;font:700 20px/1.2 var(--display);letter-spacing:.02em}
+.rules-body{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+.rules-help{margin:0;color:var(--muted);max-width:72ch}
+.rule-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+.rule{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;gap:6px 10px;align-items:end;padding:10px;
+  background:var(--slot);border:2px solid var(--edge);border-radius:3px;box-shadow:inset 0 0 0 1px var(--panel-hi)}
+.rule.active{border-color:var(--torch-deep);box-shadow:inset 0 0 0 1px var(--torch)}
+.rule.active::after{content:"Active in this run";grid-column:1/-1;font:600 12px/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--torch)}
+.rule.cancelled::after{content:"Cancelled by your cancel list";grid-column:1/-1;font:600 12px/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rule .hard{grid-column:1/-1}
+.rf{display:flex;flex-direction:column;gap:4px;min-width:0}
+.rf label{font:600 12px/1.2 var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+input.r-in{width:100%;min-width:0;height:36px;padding:0 10px;background:var(--panel);color:var(--text);
+  border:2px solid var(--edge);border-radius:3px;font:500 14px var(--body)}
+input.r-in:focus{outline:none;border-color:var(--torch)}
+input.r-in.warn{border-color:var(--danger)}
+.arrow{font:700 20px/1 var(--display);color:var(--torch);padding-bottom:8px}
+.rnote{grid-column:1/-1;margin:0;font-size:12px;color:var(--danger)}
+@media (max-width:640px){
+  .rule{grid-template-columns:minmax(0,1fr) auto}
+  .rule .arrow{display:none}
+  .rule .rf.if{grid-column:1;grid-row:1}
+  .rule .rm{grid-column:2;grid-row:1}
+  .rule .rf.add{grid-column:1/-1;grid-row:2}
+}
+.sw{flex:none;width:10px;height:26px;border-radius:2px;border:1px solid var(--edge)}
+input.opt,input.add-in,input.req-in{flex:1;min-width:0;height:36px;padding:0 10px;background:var(--slot);color:var(--text);
+  border:2px solid var(--edge);border-radius:3px;font:500 14px var(--body)}
+input.opt:focus,input.add-in:focus,input.req-in:focus{outline:none;border-color:var(--torch)}
+input.add-in::placeholder{color:var(--muted);opacity:.8}
+.addrow{display:flex;gap:8px}
+.opts:disabled .btn,.opts:disabled input{opacity:.55}
+.empty{border:2px dashed var(--panel-hi);border-radius:4px;padding:28px;text-align:center;color:var(--muted)}
+.dock{position:sticky;bottom:0;z-index:5;display:flex;justify-content:center;
+  padding:18px 0 max(14px,env(safe-area-inset-bottom,0px));
+  background:linear-gradient(rgba(13,18,48,0),var(--night) 45%)}
+.btn.big{min-height:54px;padding:0 28px;width:min(100%,440px);font:700 19px/1 var(--display);letter-spacing:.02em}
+/* difficulty switch, editor and window */
+.switch{display:inline-flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);cursor:pointer;position:relative}
+.switch input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+.switch .track{flex:none;width:36px;height:20px;border-radius:3px;background:var(--slot);border:2px solid var(--edge);position:relative;transition:background .12s}
+.switch .track::after{content:"";position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:1px;background:var(--muted);transition:transform .12s}
+.switch input:checked+.track{background:var(--torch-deep)}
+.switch input:checked+.track::after{transform:translateX(16px);background:var(--torch)}
+.switch input:focus-visible+.track{outline:3px solid var(--torch);outline-offset:2px}
+.switch:has(input:checked){color:var(--text)}
+.dgroup{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:8px 10px;align-items:end;padding:10px;
+  background:var(--slot);border:2px solid var(--edge);border-radius:3px;box-shadow:inset 0 0 0 1px var(--panel-hi)}
+.dgroup .op,.dgroup .rp{grid-column:1/-1}
+.linkbox{display:flex;flex-direction:column;gap:10px;padding:10px;background:var(--slot);border:2px solid var(--edge);border-radius:3px;box-shadow:inset 0 0 0 1px var(--panel-hi)}
+.linkgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:10px}
+.dlg{padding:0;border:2px solid var(--edge);border-radius:4px;background:var(--panel);color:var(--text);
+  width:min(720px,calc(100% - 32px - 2*max(env(safe-area-inset-left,0px),env(safe-area-inset-right,0px))));
+  max-height:calc(100% - 32px - 2*max(env(safe-area-inset-top,0px),env(safe-area-inset-bottom,0px)));overflow:auto;box-shadow:inset 0 0 0 2px var(--panel-hi),0 8px 0 var(--edge)}
+.dlg::backdrop{background:rgba(8,11,36,.8)}
+.dlg-body{padding:18px;display:flex;flex-direction:column;gap:14px}
+.dlg-head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.dlg-sub{margin:0;color:var(--muted);font-size:13px}
+.dlg-wheels{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:18px}
+.dwheel{display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0;text-align:center}
+.dwheel h3{margin:0;font:700 16px/1.2 var(--display);overflow-wrap:anywhere}
+.dlg .stage{max-width:230px}
+.dres{display:flex;justify-content:center;min-height:38px}
+.dlg-foot{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+@media (max-width:640px){
+  .dgroup{grid-template-columns:minmax(0,1fr) auto}
+  .dgroup .nm{grid-column:1;grid-row:1}
+  .dgroup .rm{grid-column:2;grid-row:1}
+  .dgroup .nd{grid-column:1/-1;grid-row:2}
+  .dgroup .op{grid-column:1/-1;grid-row:3}
+  .dgroup .rp{grid-column:1/-1;grid-row:4}
+}
+.foot{color:var(--muted);font-size:13px;margin:0}
+@media (max-width:520px){
+  .toolbar{width:100%}
+  .toolbar .btn{flex:1 1 auto}
+  .run-list{grid-template-columns:1fr;gap:4px}
+  .run-k{margin-top:6px}
+}
+@media (prefers-reduced-motion:reduce){.btn,.switch .track,.switch .track::after{transition:none}}
+html,body{margin:0}
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="top">
+      <div>
+        <h1>Terraria Spin Wheels</h1>
+        <p class="sub">Let fate pick your loadout. The Guide takes no responsibility.</p>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="add-wheel" type="button">Add wheel</button>
+      </div>
+    </div>
+    <div class="grass" aria-hidden="true"></div>
+  </header>
+
+  <section class="debugbar" id="debugbar" aria-label="Debug mode" hidden>
+    <strong>Debug mode</strong>
+    <span>Pin an option to force it on that wheel's next spin. Spin a single wheel to re-roll just that one. In the difficulty window every wheel gets a Force box and its own Re-roll.</span>
+    <button class="btn sm" id="dbg-clear" type="button">Clear pins</button>
+    <button class="btn sm" id="dbg-exit" type="button">Exit</button>
+  </section>
+
+  <section class="run" aria-labelledby="run-h">
+    <div class="run-head">
+      <h2 id="run-h">Your run</h2>
+      <div class="run-actions">
+        <span id="status" role="status"></span>
+        <label class="switch" for="std-on"><input type="checkbox" id="std-on" checked><span class="track" aria-hidden="true"></span><span>Difficulty roll</span></label>
+        <label class="switch" for="diff-on"><input type="checkbox" id="diff-on" checked><span class="track" aria-hidden="true"></span><span>Mod difficulty roll</span></label>
+        <button class="btn sm" id="copy" type="button" disabled>Copy run</button>
+      </div>
+    </div>
+    <p class="run-empty" id="run-empty">Spin a wheel or hit Spin all. Results collect here so you can copy the whole run.</p>
+    <div class="run-list" id="run-list" hidden></div>
+    <textarea id="fallback" readonly hidden aria-label="Run text to copy"></textarea>
+  </section>
+
+  <main>
+    <div class="wheels" id="wheels"></div>
+    <div class="empty" id="empty" hidden>No wheels yet. Use Add wheel to make one, or reset to the starter set.</div>
+  </main>
+
+  <details class="rules-panel">
+    <summary>Mod rules</summary>
+    <div class="rules-body">
+      <p class="rules-help">When every comma-separated item in "If rolled" has been rolled on any wheel, the mods in "Add mods" join your run. Use | for "or", so <b>Bard | Healer, Calamity Mod</b> means (Bard or Healer) and Calamity Mod. Names must match an option exactly (capitals don't matter). Mods added by one rule count as rolled for the others. Tick "Always required" for mods a class can't run without; the cancel list leaves those in place and only waives the rest as compat mods.</p>
+      <ul class="rule-list" id="rule-list"></ul>
+      <div><button class="btn sm" id="add-rule" type="button">Add rule</button></div>
+      <div class="rf">
+        <label for="cancel-in">Cancel compat rules when one of these is rolled</label>
+        <input class="r-in" id="cancel-in" maxlength="240" placeholder="e.g. No compat mods">
+      </div>
+    </div>
+  </details>
+
+  <details class="rules-panel" id="diff-panel">
+    <summary>Difficulty wheels</summary>
+    <div class="rules-body">
+      <p class="rules-help">These wheels spin in the difficulty window, which opens after Spin all. A wheel with no mod set is a standard difficulty and follows the "Difficulty roll" switch. A wheel with a mod set only appears when that mod is in the run, whether it was rolled or added by a rule, and follows the "Mod difficulty roll" switch. List several mods with commas to need all of them. A wheel can name other wheels in "Replaces" to take their place while it appears.</p>
+      <ul class="rule-list" id="diff-list"></ul>
+      <div><button class="btn sm" id="add-diff" type="button">Add difficulty wheel</button></div>
+      <div class="linkbox">
+        <label class="lock" for="link-on"><input type="checkbox" id="link-on" checked> Link standard and mod difficulties</label>
+        <div class="linkgrid">
+          <div class="rf"><label for="link-force">Set the top standard difficulty</label><input class="r-in" id="link-force" maxlength="120"></div>
+          <div class="rf"><label for="link-top">Top mod difficulties</label><input class="r-in" id="link-top" maxlength="120"></div>
+          <div class="rf"><label for="link-lift">Pushed to the top by the top standard difficulty</label><input class="r-in" id="link-lift" maxlength="120"></div>
+          <div class="rf"><label for="link-std">Top standard difficulty</label><input class="r-in" id="link-std" maxlength="60" placeholder="Legendary"></div>
+          <div class="rf"><label for="link-neutral">Normal option</label><input class="r-in" id="link-neutral" maxlength="60" placeholder="Normal"></div>
+          <div class="rf"><label for="link-both">Always set on combined wheels</label><input class="r-in" id="link-both" maxlength="120"></div>
+        </div>
+        <p class="rules-help">Rolling a mod difficulty listed under "Set the top standard difficulty" (Malice) sets the standard difficulty to its top option. Masochist is not listed, so Master with Masochist is possible. Rolling the top standard difficulty pushes the mod difficulties listed under "Pushed to the top" to their own top option, so Death becomes Malice and Eternity becomes Masochist, while Revengeance stays as rolled. Malice is only possible on the top standard difficulty. On a combined wheel (one that needs several mods, such as Calamity and Fargo together) the top standard difficulty always gives the options listed under "Always set on combined wheels", even when the roll was Normal, because Masochist overrides Death and Malice. Forced results are marked "set by" in the window and in Your run.</p>
+      </div>
+    </div>
+  </details>
+
+  <div class="dock">
+    <button class="btn primary big" id="spin-all" type="button">Spin all wheels</button>
+  </div>
+
+  <p class="foot">
+    Wheels save in this browser.
+    <button class="btn ghost sm danger" id="reset" type="button">Reset to starter wheels</button>
+  </p>
+</div>
+
+<dialog class="dlg" id="diff-dlg" aria-labelledby="diff-title">
+  <div class="dlg-body">
+    <div class="dlg-head">
+      <h2 id="diff-title">Difficulty roll</h2>
+      <button class="btn ghost sm" id="diff-close" type="button">Close</button>
+    </div>
+    <p class="dlg-sub" id="diff-sub"></p>
+    <div class="dlg-wheels" id="diff-wheels"></div>
+    <div class="dlg-foot">
+      <button class="btn primary" id="diff-spin" type="button">Spin</button>
+      <span class="note" id="diff-note"></span>
+    </div>
+  </div>
+</dialog>
+
+<script>
+(function(){
+  var STORE = 'terraria-spin-wheels-v1';
+  var TAU = Math.PI * 2;
+  var MAX_OPTS = 60;
+  var COLORS = ['#c4561f','#2f8a46','#2f66c4','#8e49b8','#9c7410','#b8324a','#1f8c92','#c2447a'];
+
+  var grid = document.getElementById('wheels');
+  var emptyEl = document.getElementById('empty');
+  var runList = document.getElementById('run-list');
+  var runEmpty = document.getElementById('run-empty');
+  var copyBtn = document.getElementById('copy');
+  var fallback = document.getElementById('fallback');
+  var statusEl = document.getElementById('status');
+  var spinAllBtn = document.getElementById('spin-all');
+  var resetBtn = document.getElementById('reset');
+
+  var wheels = [];
+  var rules = [];
+  var cancel = [];
+  var diffs = [];
+  var diffOn = true;
+  var stdOn = true;
+  var links = starterLinks();
+  var diffResult = null;
+  var debug = false;          /* unlocked by the Konami code, never saved */
+  var debugDiff = {};         /* forced difficulty picks by wheel name, for the session */
+  var seq = 0;
+
+  function mod(a, m){ return ((a % m) + m) % m; }
+  function sleep(ms){ return new Promise(function(r){ setTimeout(r, ms); }); }
+  function reduced(){ return !!(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches); }
+  function byId(id){ return wheels.find(function(w){ return w.id === id; }); }
+  function colorFor(i, n){
+    var L = COLORS.length, k = i % L;
+    if (n > 1 && i === n - 1 && k === 0) k = Math.floor(L / 2);
+    return COLORS[k];
+  }
+
+  /* ---------- data ---------- */
+  function starter(){
+    return [
+      { title: 'Class', picks: 1, options: ['Melee','Ranger','Mage','Summoner','Rogue','Bard','Healer','Thrower'] },
+      { title: 'Mods', picks: 2, options: ['Calamity Mod','Thorium Mod',"Fargo's Souls",'Spirit Mod','Redemption','Stars Above','Secrets of the Shadows','Starlight River'] },
+      { title: 'Handicap', picks: 2, options: ['No armor','No healing potions','No grappling hook','No wings or mounts','Max 3 accessories','No buff potions','One life (Hardcore)','No recall or mirrors','Weapons from loot only','No magic storage','Autopause always off','No vein miner mod','No compat mods'] }
+    ];
+  }
+  function starterRules(){
+    /* "|" inside a term means "or"; commas between terms mean "and". hard rules ignore the cancel list. */
+    return [
+      { if: ['Bard | Healer | Thrower'], add: ['Thorium Mod'], hard: true },
+      { if: ['Rogue'], add: ['Calamity Mod'], hard: true },
+      { if: ['Bard | Healer | Thrower','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Bard | Healer | Thrower',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Bard | Healer | Thrower','Secrets of the Shadows'], add: ['Helheim','SOTS Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Rogue','Thorium Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Calamity Mod',"Fargo's Souls"], add: ["Fargo's Souls DLC"], hard: false }
+    ];
+  }
+  function starterModDiffs(){
+    return [
+      { name: 'Calamity difficulty', needs: 'Calamity Mod', options: ['Normal','Revengeance','Death','Malice'], replaces: [] },
+      { name: "Fargo's Souls difficulty", needs: "Fargo's Souls", options: ['Normal','Eternity','Masochist'], replaces: [] },
+      { name: 'Calamity + Fargo difficulty', needs: "Calamity Mod, Fargo's Souls",
+        options: ['Normal','Revengeance','Death','Malice','Eternity','Masochist',
+          'Revengeance + Eternity','Revengeance + Masochist','Death + Eternity','Malice + Eternity'],
+        replaces: ['Calamity difficulty', "Fargo's Souls difficulty"] }
+    ];
+  }
+  /* the mod wheels from before Masochist overrode Death and Malice (those combined options existed), so unedited copies upgrade */
+  function previousModDiffs3(){
+    return [
+      { name: 'Calamity difficulty', needs: 'Calamity Mod', options: ['Normal','Revengeance','Death','Malice'], replaces: [] },
+      { name: "Fargo's Souls difficulty", needs: "Fargo's Souls", options: ['Normal','Eternity','Masochist'], replaces: [] },
+      { name: 'Calamity + Fargo difficulty', needs: "Calamity Mod, Fargo's Souls",
+        options: ['Normal','Revengeance','Death','Malice','Eternity','Masochist',
+          'Revengeance + Eternity','Revengeance + Masochist','Death + Eternity','Death + Masochist','Malice + Eternity','Malice + Masochist'],
+        replaces: ['Calamity difficulty', "Fargo's Souls difficulty"] }
+    ];
+  }
+  /* the mod wheels from before "Normal" was added, so unedited copies upgrade */
+  function previousModDiffs2(){
+    return [
+      { name: 'Calamity difficulty', needs: 'Calamity Mod', options: ['Revengeance','Death','Malice'], replaces: [] },
+      { name: "Fargo's Souls difficulty", needs: "Fargo's Souls", options: ['Eternity','Masochist'], replaces: [] },
+      { name: 'Calamity + Fargo difficulty', needs: "Calamity Mod, Fargo's Souls",
+        options: ['Revengeance + Eternity','Revengeance + Masochist','Death + Eternity','Death + Masochist','Malice + Eternity','Malice + Masochist'],
+        replaces: ['Calamity difficulty', "Fargo's Souls difficulty"] }
+    ];
+  }
+  function starterLinks(){ return { on: true, std: 'Legendary', top: ['Malice','Masochist'], force: ['Malice'], lift: ['Death','Malice','Eternity','Masochist'], neutral: 'Normal', both: ['Masochist'] }; }
+  function cleanLinks(o){
+    var d = starterLinks();
+    o = o || {};
+    return { on: o.on !== false, std: String(o.std == null ? '' : o.std).trim().slice(0, 60) || d.std,
+      top: Array.isArray(o.top) ? cleanList(o.top) : d.top, neutral: String(o.neutral == null ? '' : o.neutral).trim().slice(0, 60) || d.neutral,
+      /* older saves had no such list: every top mod difficulty forced it, except Masochist, which no longer does */
+      force: Array.isArray(o.force) ? cleanList(o.force) : (Array.isArray(o.top) ? cleanList(o.top).filter(function(x){ return x.toLowerCase() !== 'masochist'; }) : d.force),
+      lift: Array.isArray(o.lift) ? cleanList(o.lift) : d.lift,
+      both: Array.isArray(o.both) ? cleanList(o.both) : d.both };
+  }
+  /* A group with no mod is a standard difficulty (switch: Difficulty roll); a group with a mod is a mod difficulty (switch: Mod difficulty roll). */
+  function starterDiffs(){
+    return [{ name: 'Difficulty', needs: '', options: ['Normal','Expert','Master','Legendary'], replaces: [] }].concat(starterModDiffs());
+  }
+  function previousModDiffs(){
+    return [
+      { name: 'Calamity difficulty', needs: 'Calamity Mod', options: ['Revengeance','Death','Malice'] },
+      { name: "Fargo's Souls difficulty", needs: "Fargo's Souls", options: ['Eternity','Masochist'] }
+    ];
+  }
+  function cleanDiffs(a){
+    return Array.isArray(a) ? a.slice(0, 12).map(function(g){
+      return { name: String((g && g.name) || 'Difficulty').slice(0, 60), needs: String((g && g.needs) || '').slice(0, 120),
+        options: cleanList(g && g.options), replaces: cleanList(g && g.replaces) };
+    }) : [];
+  }
+  /* every comma-separated item must be present; "|" inside an item means "or"; blank means always */
+  function needsMet(needs, present){
+    return parseList(needs).every(function(t){ return !!termHit(t, present); });
+  }
+  /* An unedited Handicap list gains the newer standard handicaps, and an unchanged single pick becomes two. */
+  function upgradeWheels(ws){
+    var base = ['No armor','No healing potions','No grappling hook','No wings or mounts','Max 3 accessories','No buff potions','One life (Hardcore)','No recall or mirrors','Weapons from loot only'];
+    var prev1 = base.concat(['No compat mods']);
+    var prev2 = base.concat(['No magic storage','Autopause always off','No compat mods']);
+    ws.forEach(function(w){
+      if (!w || w.title !== 'Handicap' || !Array.isArray(w.options)) return;
+      var s = JSON.stringify(w.options), up = false;
+      if (s === JSON.stringify(prev1)){
+        w.options = base.concat(['No magic storage','Autopause always off','No vein miner mod','No compat mods']); up = true;
+      } else if (s === JSON.stringify(prev2)){
+        w.options = base.concat(['No magic storage','Autopause always off','No vein miner mod','No compat mods']); up = true;
+      }
+      if (up && (w.picks === 1 || w.picks == null)) w.picks = 2;
+    });
+    return ws;
+  }
+  /* Older saves had Difficulty as a normal wheel. Take it out of the list and return its options for the difficulty window. */
+  function pullDifficulty(ws){
+    var i = ws.findIndex(function(w){ return w && w.title === 'Difficulty'; });
+    if (i < 0) return null;
+    var opts = (Array.isArray(ws[i].options) ? ws[i].options : []).map(function(o){
+      return String(o && typeof o === 'object' ? o.t : o).trim();
+    }).filter(Boolean).slice(0, 12);
+    ws.splice(i, 1);
+    return opts;
+  }
+  /* the previous starter set, so an unedited saved copy upgrades to the current one */
+  function previousStarterRules(){
+    return [
+      { if: ['Bard'], add: ['Thorium Mod'] },
+      { if: ['Calamity Mod','Bard'], add: ['Thorium Mod','Helheim','Calamity Bard & Healer Compat'] },
+      { if: ['Thrower'], add: ['Thorium Mod'] },
+      { if: ['Rogue'], add: ['Calamity Mod'] },
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'] }
+    ];
+  }
+  function previousStarterRules2(){
+    return [
+      { if: ['Bard | Healer | Thrower'], add: ['Thorium Mod'], hard: true },
+      { if: ['Rogue'], add: ['Calamity Mod'], hard: true },
+      { if: ['Bard | Healer','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer Compat'], hard: false },
+      { if: ['Bard | Healer',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer Compat'], hard: false },
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false }
+    ];
+  }
+  /* the starter set before Thrower joined the Bard & Healer compat rules */
+  function previousStarterRules3(){
+    return [
+      { if: ['Bard | Healer | Thrower'], add: ['Thorium Mod'], hard: true },
+      { if: ['Rogue'], add: ['Calamity Mod'], hard: true },
+      { if: ['Bard | Healer','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer Compat'], hard: false },
+      { if: ['Bard | Healer',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer Compat'], hard: false },
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Calamity Mod',"Fargo's Souls"], add: ["Fargo's Souls DLC"], hard: false }
+    ];
+  }
+  /* the starter set before the Rogue + Thorium unification rule and the "& Thrower" compat names */
+  function previousStarterRules4(){
+    return [
+      { if: ['Bard | Healer | Thrower'], add: ['Thorium Mod'], hard: true },
+      { if: ['Rogue'], add: ['Calamity Mod'], hard: true },
+      { if: ['Bard | Healer | Thrower','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer Compat'], hard: false },
+      { if: ['Bard | Healer | Thrower',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer Compat'], hard: false },
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Calamity Mod',"Fargo's Souls"], add: ["Fargo's Souls DLC"], hard: false }
+    ];
+  }
+  /* the starter set before the Secrets of the Shadows compat rule */
+  function previousStarterRules5(){
+    return [
+      { if: ['Bard | Healer | Thrower'], add: ['Thorium Mod'], hard: true },
+      { if: ['Rogue'], add: ['Calamity Mod'], hard: true },
+      { if: ['Bard | Healer | Thrower','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Bard | Healer | Thrower',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Rogue','Thorium Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Calamity Mod',"Fargo's Souls"], add: ["Fargo's Souls DLC"], hard: false }
+    ];
+  }
+  /* the starter set before Helheim was added to the Secrets of the Shadows compat rule */
+  function previousStarterRules6(){
+    return [
+      { if: ['Bard | Healer | Thrower'], add: ['Thorium Mod'], hard: true },
+      { if: ['Rogue'], add: ['Calamity Mod'], hard: true },
+      { if: ['Bard | Healer | Thrower','Calamity Mod'], add: ['Helheim','Calamity Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Bard | Healer | Thrower',"Fargo's Souls"], add: ['Helheim','Fargo Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Bard | Healer | Thrower','Secrets of the Shadows'], add: ['SOTS Bard & Healer & Thrower Compat'], hard: false },
+      { if: ['Thrower','Calamity Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Rogue','Thorium Mod'], add: ['Thrower Unification Mod'], hard: false },
+      { if: ['Calamity Mod',"Fargo's Souls"], add: ["Fargo's Souls DLC"], hard: false }
+    ];
+  }
+  function migrateRules(rs){
+    var s = JSON.stringify(rs);
+    var old = [previousStarterRules(), previousStarterRules2(), previousStarterRules3(), previousStarterRules4(), previousStarterRules5(), previousStarterRules6()].some(function(p){ return JSON.stringify(cleanRules(p)) === s; });
+    return old ? starterRules() : rs;
+  }
+  function parseList(v){ return String(v).split(',').map(function(s){ return s.trim(); }).filter(Boolean).slice(0, 24); }
+  function cleanList(a){ return Array.isArray(a) ? a.map(function(x){ return String(x).trim().slice(0, 60); }).filter(Boolean).slice(0, 24) : []; }
+  function cleanRules(a){
+    return Array.isArray(a) ? a.slice(0, 40).map(function(r){
+      return { if: cleanList(r && r.if), add: cleanList(r && r.add), hard: !!(r && r.hard) };
+    }) : [];
+  }
+  function make(d){
+    var opts = Array.isArray(d.options) ? d.options.map(function(s){
+      var o = (s && typeof s === 'object') ? s : { t: s };
+      return { t: String(o.t == null ? '' : o.t).slice(0, 60) };
+    }).filter(function(o){ return o.t.trim(); }).slice(0, MAX_OPTS) : [];
+    var picks = parseInt(d.picks, 10); if (!(picks >= 1)) picks = 1; if (picks > 12) picks = 12;
+    return {
+      id: 'w' + (++seq),
+      title: String(d.title == null ? 'Wheel' : d.title).slice(0, 60),
+      options: opts, picks: picks, locked: !!d.locked,
+      result: [], picked: new Set(), forced: new Set(), rot: Math.random() * TAU,
+      spinning: false, dead: false, ui: null
+    };
+  }
+  function save(){
+    try {
+      localStorage.setItem(STORE, JSON.stringify({
+        v: 4,
+        wheels: wheels.map(function(w){
+          return { title: w.title, options: w.options.map(function(o){ return o.t; }), picks: w.picks, locked: w.locked };
+        }),
+        rules: rules, cancel: cancel, diffs: diffs, diffOn: diffOn, stdOn: stdOn, links: links
+      }));
+    } catch (e) {}
+    markRules();
+  }
+  function load(){
+    try {
+      var raw = localStorage.getItem(STORE);
+      if (!raw) return null;
+      var a = JSON.parse(raw), v, ws, rs, cn, ds = null, on = true, std = true, lk = starterLinks();
+      if (a && Array.isArray(a.wheels)){
+        v = a.v || 2; ws = a.wheels;
+        rs = Array.isArray(a.rules) ? migrateRules(cleanRules(a.rules)) : starterRules();
+        cn = Array.isArray(a.cancel) ? cleanList(a.cancel) : ['No compat mods'];
+        ds = Array.isArray(a.diffs) ? cleanDiffs(a.diffs) : null;
+        on = a.diffOn !== false; std = a.stdOn !== false;
+        if (a.links) lk = cleanLinks(a.links);
+      } else if (Array.isArray(a)){
+        /* older saves held only wheels; per-option requirements become rules */
+        v = 1; ws = a; rs = []; cn = [];
+        a.forEach(function(w){
+          (w && Array.isArray(w.options) ? w.options : []).forEach(function(o){
+            if (o && typeof o === 'object'){
+              if (o.req && o.req.length) rs.push({ if: [o.t], add: o.req });
+              if (o.waive) cn.push(o.t);
+            }
+          });
+        });
+        rs = rs.length ? cleanRules(rs) : starterRules();
+        cn = cn.length ? cleanList(cn) : ['No compat mods'];
+      } else return null;
+      upgradeWheels(ws);
+      var stdOpts = v < 4 ? pullDifficulty(ws) : null;
+      if (!ds) ds = starterDiffs();
+      /* unedited Calamity and Fargo wheels upgrade to the set that includes the combined wheel */
+      var modG = ds.filter(function(g){ return g.needs.trim(); });
+      if ([previousModDiffs(), previousModDiffs2(), previousModDiffs3()].some(function(p){ return JSON.stringify(modG) === JSON.stringify(cleanDiffs(p)); })){
+        ds = ds.filter(function(g){ return !g.needs.trim(); }).concat(starterModDiffs());
+      }
+      if (v < 4){
+        var sg = ds.filter(function(g){ return !g.needs.trim(); })[0];
+        if (!sg){ sg = { name: 'Difficulty', needs: '', options: ['Normal','Expert','Master','Legendary'], replaces: [] }; ds.unshift(sg); }
+        if (stdOpts && stdOpts.length) sg.options = stdOpts;
+      }
+      /* an unedited base difficulty wheel gains the Normal option */
+      ds.forEach(function(g){
+        if (!g.needs.trim() && JSON.stringify(g.options) === JSON.stringify(['Expert','Master','Legendary'])) g.options = ['Normal'].concat(g.options);
+      });
+      return { wheels: ws, rules: rs, cancel: cn, diffs: ds, diffOn: on, stdOn: std, links: lk };
+    } catch (e) { return null; }
+  }
+
+  /* ---------- drawing ---------- */
+  function fit(ctx, text, max){
+    if (ctx.measureText(text).width <= max) return text;
+    while (text.length > 1 && ctx.measureText(text + '…').width > max) text = text.slice(0, -1);
+    return text.trimEnd() + '…';
+  }
+  /* split a label at the space that gives the most even halves */
+  function splitTwo(t){
+    var best = -1, bestDiff = 1e9;
+    for (var i = 1; i < t.length - 1; i++){
+      if (t[i] !== ' ') continue;
+      var d = Math.abs(i - (t.length - i - 1));
+      if (d < bestDiff){ bestDiff = d; best = i; }
+    }
+    return best < 0 ? null : [t.slice(0, best), t.slice(best + 1)];
+  }
+  function draw(w){
+    if (!w.ui || w.dead) return;
+    var c = w.ui.canvas;
+    var css = c.clientWidth || 300;
+    var dpr = window.devicePixelRatio || 1;
+    var px = Math.round(css * dpr);
+    if (c.width !== px){ c.width = px; c.height = px; }
+    var ctx = c.getContext('2d');
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, css, css);
+    var R = css / 2 - 6, n = w.options.length;
+    ctx.save();
+    ctx.translate(css / 2, css / 2);
+    ctx.beginPath(); ctx.arc(0, 0, R + 4, 0, TAU); ctx.fillStyle = '#080b24'; ctx.fill();
+    if (n === 0){
+      ctx.beginPath(); ctx.arc(0, 0, R, 0, TAU); ctx.fillStyle = '#161e55'; ctx.fill();
+      ctx.fillStyle = '#a8b2ea'; ctx.font = '600 15px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('Add options below', 0, 0);
+      ctx.restore(); return;
+    }
+    ctx.rotate(w.rot);
+    var a = TAU / n;
+    var fs = Math.max(8, Math.min(15, 0.7 * R * a * 0.55));
+    for (var i = 0; i < n; i++){
+      var s = -Math.PI / 2 + i * a;
+      ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R, s, s + a); ctx.closePath();
+      ctx.fillStyle = colorFor(i, n); ctx.fill();
+      if (w.picked.has(i)){ ctx.fillStyle = 'rgba(8,11,36,.62)'; ctx.fill(); }
+      ctx.lineWidth = 2; ctx.strokeStyle = '#080b24'; ctx.stroke();
+      ctx.save();
+      ctx.rotate(s + a / 2);
+      ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+      ctx.font = '700 ' + fs + 'px Inter, system-ui, sans-serif';
+      /* shrink long labels, then split onto two lines at a space, and only truncate as a last resort */
+      var raw = w.options[i].t || '…', maxW = R * 0.72, f = fs, lines;
+      for (;;){
+        ctx.font = '700 ' + f + 'px Inter, system-ui, sans-serif';
+        if (ctx.measureText(raw).width <= maxW){ lines = [raw]; break; }
+        var sp = splitTwo(raw);
+        var roomForTwo = 2 * (f + 1) <= 0.75 * R * 0.6 * a;
+        if (sp && roomForTwo && ctx.measureText(sp[0]).width <= maxW && ctx.measureText(sp[1]).width <= maxW){ lines = sp; break; }
+        if (f <= 10){
+          lines = (sp && roomForTwo) ? [fit(ctx, sp[0], maxW), fit(ctx, sp[1], maxW)] : [fit(ctx, raw, maxW)];
+          break;
+        }
+        f -= 1;
+      }
+      ctx.lineJoin = 'round'; ctx.lineWidth = 3; ctx.strokeStyle = 'rgba(8,11,36,.55)';
+      lines.forEach(function(ln, k){ ctx.strokeText(ln, R - 20, (k - (lines.length - 1) / 2) * (f + 1)); });
+      ctx.fillStyle = w.picked.has(i) ? 'rgba(238,241,255,.6)' : '#fff';
+      lines.forEach(function(ln, k){ ctx.fillText(ln, R - 20, (k - (lines.length - 1) / 2) * (f + 1)); });
+      ctx.restore();
+    }
+    ctx.rotate(-w.rot);
+    ctx.beginPath(); ctx.arc(0, 0, Math.max(9, R * 0.1), 0, TAU);
+    ctx.fillStyle = '#f5a73b'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#080b24'; ctx.stroke();
+    ctx.restore();
+  }
+
+  /* ---------- card ui ---------- */
+  function buildCard(w){
+    var el = document.createElement('article');
+    el.className = 'wheel';
+    el.dataset.id = w.id;
+    el.innerHTML =
+      '<div class="wh">' +
+        '<input class="title" id="title-' + w.id + '" aria-label="Wheel name" maxlength="60">' +
+        '<div class="wh-actions">' +
+          '<button class="btn ghost sm" type="button" data-act="dup">Duplicate</button>' +
+          '<button class="btn ghost sm danger" type="button" data-act="del">Remove</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="stage"><canvas data-act="spin" title="Click to spin" aria-label="Wheel"></canvas><div class="pointer" aria-hidden="true"></div></div>' +
+      '<div class="controls">' +
+        '<button class="btn primary" type="button" data-act="spin">Spin</button>' +
+        '<span class="picks">Picks ' +
+          '<button class="btn sm sq" type="button" data-act="pm" aria-label="Fewer picks">−</button>' +
+          '<output aria-live="polite"></output>' +
+          '<button class="btn sm sq" type="button" data-act="pp" aria-label="More picks">+</button>' +
+        '</span>' +
+        '<label class="lock" for="lock-' + w.id + '"><input type="checkbox" class="lock-cb" id="lock-' + w.id + '"> Skip in Spin all</label>' +
+      '</div>' +
+      '<div class="result" aria-live="polite"></div>' +
+      '<fieldset class="opts">' +
+        '<h3>Options (<span class="count"></span>)</h3>' +
+        '<ul class="optlist"></ul>' +
+        '<div class="addrow">' +
+          '<input class="add-in" id="add-' + w.id + '" placeholder="Add option, or paste a list" maxlength="60" aria-label="New option">' +
+          '<button class="btn sm" type="button" data-act="add">Add</button>' +
+        '</div>' +
+      '</fieldset>';
+    var q = function(s){ return el.querySelector(s); };
+    w.ui = {
+      el: el, canvas: q('canvas'), title: q('.title'), result: q('.result'), list: q('.optlist'),
+      count: q('.count'), addIn: q('.add-in'), spinBtn: q('.controls .primary'),
+      picksOut: q('.picks output'), pm: q('[data-act="pm"]'), pp: q('[data-act="pp"]'),
+      lock: q('.lock-cb'), opts: q('.opts')
+    };
+    w.ui.title.value = w.title;
+    w.ui.lock.checked = w.locked;
+    renderOptions(w);
+    renderPicks(w);
+    renderResult(w, true);
+    if (window.ResizeObserver){
+      new ResizeObserver(function(){ draw(w); }).observe(w.ui.canvas);
+    }
+    return el;
+  }
+  function renderOptions(w){
+    var ul = w.ui.list, n = w.options.length;
+    ul.textContent = '';
+    w.options.forEach(function(o, i){
+      var li = document.createElement('li'); li.dataset.i = i;
+      var row = document.createElement('div'); row.className = 'orow';
+      var sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = colorFor(i, n);
+      var inp = document.createElement('input'); inp.className = 'opt'; inp.value = o.t; inp.maxLength = 60;
+      inp.id = w.id + '-opt-' + i; inp.setAttribute('aria-label', 'Option ' + (i + 1));
+      var x = document.createElement('button'); x.type = 'button'; x.className = 'btn ghost sm sq'; x.dataset.act = 'rm';
+      x.setAttribute('aria-label', 'Remove option ' + (i + 1)); x.textContent = '×';
+      row.appendChild(sw); row.appendChild(inp);
+      if (debug){
+        var pin = document.createElement('button'); pin.type = 'button'; pin.dataset.act = 'pin';
+        var pinned = w.forced.has(o);
+        pin.className = 'btn sm pin' + (pinned ? ' on' : ''); pin.textContent = 'Pin';
+        pin.setAttribute('aria-pressed', pinned ? 'true' : 'false');
+        pin.setAttribute('aria-label', 'Force option ' + (i + 1) + ' on the next spin');
+        row.appendChild(pin);
+      }
+      row.appendChild(x);
+      li.appendChild(row);
+      ul.appendChild(li);
+    });
+    w.ui.count.textContent = n;
+    setSpinUI(w);
+  }
+  function renderPicks(w){
+    w.ui.picksOut.textContent = w.picks;
+    w.ui.pm.disabled = w.spinning || w.picks <= 1;
+    w.ui.pp.disabled = w.spinning || w.picks >= 12;
+  }
+  function setSpinUI(w){
+    if (!w.ui) return;
+    w.ui.spinBtn.disabled = w.spinning || w.options.length === 0;
+    w.ui.spinBtn.textContent = w.spinning ? 'Spinning…' : 'Spin';
+    w.ui.opts.disabled = w.spinning;
+    renderPicks(w);
+    busy();
+  }
+  function chip(r){
+    var s = document.createElement('span'); s.className = 'chip';
+    var i = document.createElement('i'); i.style.background = r.color;
+    s.appendChild(i); s.appendChild(document.createTextNode(r.text));
+    return s;
+  }
+  function renderResult(w, quiet){
+    var box = w.ui.result; box.textContent = '';
+    if (!w.result.length){
+      var h = document.createElement('span'); h.className = 'hint'; h.textContent = 'Spin to pick';
+      box.appendChild(h);
+    } else {
+      w.result.forEach(function(r){ box.appendChild(chip(r)); });
+    }
+    if (!quiet) renderSummary();
+  }
+
+  /* ---------- summary ---------- */
+  function norm(s){ return String(s).trim().toLowerCase(); }
+  /* A term is satisfied when any of its "|" alternatives is rolled (or already added by a rule). */
+  function termHit(term, have){
+    var alts = term.split('|');
+    for (var i = 0; i < alts.length; i++) if (alts[i].trim() && have[norm(alts[i])]) return alts[i].trim();
+    return null;
+  }
+  /* Fires the given rules until nothing new is added. Mods already rolled are never listed. */
+  function fire(list, rolled){
+    var have = {}, map = {}, items = [], active = [], changed, guard = 0;
+    Object.keys(rolled).forEach(function(k){ have[k] = true; });
+    do {
+      changed = false;
+      list.forEach(function(x){
+        var rule = x.rule;
+        if (!rule.if.length || !rule.add.length) return;
+        var hits = [];
+        for (var t = 0; t < rule.if.length; t++){
+          var h = termHit(rule.if[t], have);
+          if (!h) return;
+          hits.push(h);
+        }
+        if (active.indexOf(x.i) < 0) active.push(x.i);
+        var label = hits.join(' + ');
+        rule.add.forEach(function(name){
+          var key = norm(name);
+          if (!key || rolled[key]) return;
+          var e = map[key];
+          if (!e){ e = map[key] = { text: name.trim(), by: [] }; items.push(e); have[key] = true; changed = true; }
+          if (e.by.indexOf(label) < 0) e.by.push(label);
+        });
+      });
+    } while (changed && ++guard < 10);
+    return { items: items, map: map, active: active };
+  }
+  /* hard = from rules marked "can't be cancelled"; soft = everything else, waived by the cancel list. */
+  function computeReq(){
+    var rolled = {}, names = [];
+    wheels.forEach(function(w){ w.result.forEach(function(r){ rolled[norm(r.text)] = true; names.push(r.text); }); });
+    var waivers = names.filter(function(n){ return cancel.some(function(c){ return norm(c) === norm(n); }); });
+    var all = rules.map(function(r, i){ return { rule: r, i: i }; });
+    var full = fire(all, rolled);
+    var hardOnly = fire(all.filter(function(x){ return x.rule.hard; }), rolled);
+    var soft = full.items.filter(function(e){ return !hardOnly.map[norm(e.text)]; });
+    var cancelled = waivers.length ? full.active.filter(function(i){ return !rules[i].hard; }) : [];
+    /* everything that is part of the run right now: rolled, plus mods added by rules that aren't waived */
+    var present = {};
+    Object.keys(rolled).forEach(function(k){ present[k] = true; });
+    hardOnly.items.forEach(function(e){ present[norm(e.text)] = true; });
+    if (!waivers.length) soft.forEach(function(e){ present[norm(e.text)] = true; });
+    return { hard: hardOnly.items, soft: soft, waivers: waivers, active: full.active, cancelled: cancelled, present: present };
+  }
+  function markRules(q){
+    var ul = document.getElementById('rule-list'); if (!ul) return;
+    q = q || computeReq();
+    var known = {};
+    wheels.forEach(function(w){ w.options.forEach(function(o){ known[norm(o.t)] = true; }); });
+    rules.forEach(function(r){ r.add.forEach(function(n){ known[norm(n)] = true; }); });
+    Array.prototype.forEach.call(ul.children, function(li, i){
+      var r = rules[i]; if (!r) return;
+      var isCancelled = q.cancelled.indexOf(i) >= 0;
+      li.classList.toggle('cancelled', isCancelled);
+      li.classList.toggle('active', q.active.indexOf(i) >= 0 && !isCancelled);
+      var bad = [];
+      r.if.forEach(function(term){
+        term.split('|').forEach(function(n){ if (n.trim() && !known[norm(n)]) bad.push(n.trim()); });
+      });
+      li.querySelector('.r-if').classList.toggle('warn', bad.length > 0);
+      var note = li.querySelector('.rnote');
+      note.hidden = !bad.length;
+      note.textContent = bad.length ? 'No option named ' + bad.join(', ') + ' on any wheel yet.' : '';
+    });
+  }
+  function renderRules(){
+    var ul = document.getElementById('rule-list'); ul.textContent = '';
+    rules.forEach(function(r, i){
+      var li = document.createElement('li'); li.className = 'rule'; li.dataset.i = i;
+      li.innerHTML =
+        '<div class="rf if"><label for="rif-' + i + '">If rolled (all of)</label><input class="r-in r-if" id="rif-' + i + '" maxlength="240" placeholder="e.g. Bard | Healer, Calamity Mod"></div>' +
+        '<span class="arrow" aria-hidden="true">→</span>' +
+        '<div class="rf add"><label for="radd-' + i + '">Add mods</label><input class="r-in r-add" id="radd-' + i + '" maxlength="240" placeholder="e.g. Thorium Mod, Helheim"></div>' +
+        '<button class="btn ghost sm sq rm" type="button" data-rule="rm" aria-label="Remove rule ' + (i + 1) + '">×</button>' +
+        '<label class="lock hard" for="rhard-' + i + '"><input type="checkbox" class="r-hard" id="rhard-' + i + '"> Always required (cancel list can’t remove these mods)</label>' +
+        '<p class="rnote" hidden></p>';
+      li.querySelector('.r-hard').checked = !!r.hard;
+      li.querySelector('.r-if').value = r.if.join(', ');
+      li.querySelector('.r-add').value = r.add.join(', ');
+      ul.appendChild(li);
+    });
+    document.getElementById('cancel-in').value = cancel.join(', ');
+    markRules();
+  }
+  function needChip(e, kind, skipped){
+    var s = document.createElement('span'); s.className = 'chip ' + (skipped ? 'skip' : kind);
+    s.title = 'Needed by ' + e.by.join(', ');
+    var i = document.createElement('i'); s.appendChild(i);
+    var nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = e.text; s.appendChild(nm);
+    var sm = document.createElement('small'); sm.textContent = 'for ' + e.by.join(', '); s.appendChild(sm);
+    return s;
+  }
+  function runText(){
+    var lines = wheels.filter(function(w){ return w.result.length; }).map(function(w){
+      return (w.title || 'Untitled') + ': ' + w.result.map(function(r){ return r.text; }).join(', ');
+    });
+    var q = computeReq();
+    if (diffResult) lines.push('Difficulty: ' +diffResult.map(function(r){ return r.text; }).join(', '));
+    var txt = function(e){ return e.text; };
+    if (q.hard.length) lines.push('Required mods: ' + q.hard.map(txt).join(', '));
+    if (q.soft.length) lines.push(q.waivers.length
+      ? 'Compat mods: waived by ' + q.waivers.join(', ')
+      : 'Compat mods: ' + q.soft.map(txt).join(', '));
+    runNotes(q).forEach(function(n){ lines.push('Note: ' + n.text + (n.url ? ' (' + n.url + ')' : '')); });
+    return lines.join('\n');
+  }
+  /* Notes shown in "Your run" when a combination is present. Every name in "needs" must be part of the run: a rolled
+     option, a mod added by a rule that isn't waived, or a part of a difficulty roll ("Revengeance + Masochist" counts as
+     both). kind "warn" is a warning, kind "pack" is a note with a link. To add a note, add a line to NOTES. */
+  var PACK_NOTE = 'Smells like Infernal Eclipse of Ragnarok modpack';
+  var PACK_URL = 'https://steamcommunity.com/sharedfiles/filedetails/?id=3456508757';
+  var NOTES = [
+    { kind: 'warn', needs: ['Legendary','Masochist'], text: 'Legendary + Masochist is designed to be unreasonably hard and unfair.', tag: 'Warning' },
+    { kind: 'warn', needs: ['Malice'], text: 'Malice mode is designed to be unreasonably hard and unfair.', tag: 'Warning' },
+    { kind: 'pack', needs: ['Thorium Mod','Calamity Mod',"Fargo's Souls"], text: PACK_NOTE, url: PACK_URL, tag: 'Steam Workshop ↗' },
+    { kind: 'pack', needs: ['Calamity Mod',"Fargo's Souls",'Secrets of the Shadows'], text: PACK_NOTE, url: PACK_URL, tag: 'Steam Workshop ↗' }
+  ];
+  function runNotes(q){
+    var have = {}, seen = {}, out = [];
+    Object.keys(q.present).forEach(function(k){ have[k] = true; });
+    (diffResult || []).forEach(function(r){ optParts(r.text).forEach(function(x){ have[norm(x)] = true; }); });
+    NOTES.forEach(function(n){
+      if (seen[n.text] || !n.needs.every(function(x){ return have[norm(x)]; })) return;
+      seen[n.text] = true; out.push(n);
+    });
+    return out;
+  }
+  function renderSummary(){
+    var done = wheels.filter(function(w){ return w.result.length; });
+    runList.textContent = '';
+    runList.hidden = !done.length;
+    runEmpty.hidden = !!done.length;
+    copyBtn.disabled = !done.length;
+    done.forEach(function(w){
+      var k = document.createElement('div'); k.className = 'run-k'; k.textContent = w.title || 'Untitled';
+      var v = document.createElement('div'); v.className = 'run-v';
+      w.result.forEach(function(r){ v.appendChild(chip(r)); });
+      runList.appendChild(k); runList.appendChild(v);
+    });
+    var ad = activeDiffs();
+    /* a difficulty roll only stands while the same difficulty wheels are active; rule, cancel-list and wheel edits can change that set */
+    if (diffResult){
+      var stillValid = diffResult.length === ad.act.length && ad.act.every(function(g){
+        return diffResult.some(function(r){ return norm(r.group) === norm(g.name); });
+      });
+      if (!stillValid){ diffResult = null; say('Run changed, roll difficulty again'); }
+    }
+    if (done.length && ad.act.length){
+      var dk = document.createElement('div'); dk.className = 'run-k'; dk.textContent = 'Difficulty';
+      var dv = document.createElement('div'); dv.className = 'run-v';
+      (diffResult || []).forEach(function(r){ dv.appendChild(diffChip(r)); });
+      var db = document.createElement('button'); db.type = 'button'; db.dataset.diff = '1';
+      db.className = 'btn sm' + (diffResult ? ' ghost' : ''); db.textContent = diffResult ? 'Re-roll' : 'Roll difficulty';
+      dv.appendChild(db);
+      runList.appendChild(dk); runList.appendChild(dv);
+    }
+    var q = computeReq();
+    var row = function(label, items, kind, waived){
+      if (!items.length) return;
+      var rk = document.createElement('div'); rk.className = 'run-k'; rk.textContent = label;
+      var rv = document.createElement('div'); rv.className = 'run-v';
+      items.forEach(function(e){ rv.appendChild(needChip(e, kind, waived)); });
+      if (waived){
+        var note = document.createElement('span'); note.className = 'note';
+        note.textContent = 'Waived by ' + q.waivers.join(', ');
+        rv.appendChild(note);
+      }
+      runList.appendChild(rk); runList.appendChild(rv);
+    };
+    row('Required mods', q.hard, 'need', false);
+    row('Compat mods', q.soft, 'compat', q.waivers.length > 0);
+    var notes = runNotes(q);
+    if (notes.length){
+      var nk = document.createElement('div'); nk.className = 'run-k'; nk.textContent = 'Notes';
+      var nv = document.createElement('div'); nv.className = 'run-v';
+      notes.forEach(function(n){
+        var el = document.createElement(n.url ? 'a' : 'span');
+        el.className = n.kind === 'warn' ? 'chip warnnote' : 'chip packlink';
+        if (n.url){ el.href = n.url; el.target = '_blank'; el.rel = 'noopener noreferrer'; }
+        var sw = document.createElement('i'); if (n.kind !== 'warn') sw.style.background = 'var(--torch)'; el.appendChild(sw);
+        el.appendChild(document.createTextNode(n.text));
+        var tg = document.createElement('small'); tg.textContent = n.tag || ''; el.appendChild(tg);
+        nv.appendChild(el);
+      });
+      runList.appendChild(nk); runList.appendChild(nv);
+    }
+    markRules(q);
+  }
+  var statusTimer;
+  function say(msg){
+    statusEl.textContent = msg;
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(function(){ statusEl.textContent = ''; }, 2800);
+  }
+  copyBtn.addEventListener('click', function(){
+    var t = runText(); if (!t) return;
+    var done = function(){ fallback.hidden = true; say('Copied'); };
+    var fail = function(){ fallback.hidden = false; fallback.value = t; fallback.focus(); fallback.select(); say('Press Ctrl+C to copy'); };
+    try {
+      navigator.clipboard.writeText(t).then(done, fail);
+    } catch (e) { fail(); }
+  });
+
+  /* ---------- spinning ---------- */
+  function animateTo(w, target, dur){
+    return new Promise(function(res){
+      var from = w.rot, t0 = performance.now();
+      function step(now){
+        if (w.dead) return res();
+        var t = Math.min(1, (now - t0) / dur);
+        w.rot = from + (target - from) * (1 - Math.pow(1 - t, 4));
+        draw(w);
+        if (t < 1) requestAnimationFrame(step); else res();
+      }
+      requestAnimationFrame(step);
+    });
+  }
+  function busy(){
+    var any = wheels.some(function(w){ return w.spinning; });
+    var n = wheels.filter(function(w){ return !w.locked && w.options.length; }).length;
+    spinAllBtn.disabled = any || n === 0;
+    spinAllBtn.textContent = any ? 'Spinning…' : 'Spin all wheels' + (n ? ' (' + n + ')' : '');
+  }
+  async function spinWheel(w){
+    if (w.spinning || w.dead || !w.options.length) return;
+    w.spinning = true; w.result = []; w.picked = new Set(); diffResult = null;
+    setSpinUI(w); renderResult(w); busy(); draw(w);
+    var total = Math.min(w.picks, w.options.length);
+    /* debug: pinned options come first, in option order, up to the number of picks */
+    var pins = debug ? w.options.map(function(o, i){ return w.forced.has(o) ? i : -1; }).filter(function(i){ return i >= 0; }) : [];
+    for (var k = 0; k < total; k++){
+      if (w.dead) return;
+      var n = w.options.length, pool = [];
+      for (var i = 0; i < n; i++) if (!w.picked.has(i)) pool.push(i);
+      if (!pool.length) break;
+      var idx = pins.filter(function(i){ return !w.picked.has(i); })[0];
+      if (idx === undefined) idx = pool[Math.floor(Math.random() * pool.length)];
+      var a = TAU / n;
+      var jitter = (Math.random() - 0.5) * a * 0.7;
+      var want = mod(-((idx + 0.5) * a + jitter), TAU);
+      var delta = mod(want - mod(w.rot, TAU), TAU);
+      var rm = reduced();
+      var extra = rm ? 0 : (k === 0 ? 5 : 3) + Math.floor(Math.random() * 2);
+      var dur = rm ? 450 : (k === 0 ? 4200 : 2600) + Math.random() * 600;
+      await animateTo(w, w.rot + delta + extra * TAU, dur);
+      if (w.dead) return;
+      w.rot = mod(w.rot, TAU);
+      w.picked.add(idx);
+      w.result.push({ text: w.options[idx].t || '…', color: colorFor(idx, n) });
+      renderResult(w); draw(w);
+      if (k < total - 1) await sleep(rm ? 200 : 500);
+    }
+    w.spinning = false; setSpinUI(w); busy();
+  }
+  function spinAll(){
+    var list = wheels.filter(function(w){ return !w.locked && !w.spinning && w.options.length; });
+    if (!list.length){ say('No wheels to spin'); return; }
+    spinAllBtn.disabled = true;
+    var jobs = list.map(function(w, i){ return sleep(i * 220).then(function(){ return spinWheel(w); }); });
+    Promise.all(jobs).then(function(){
+      if (!dlg.open && activeDiffs().act.length) setTimeout(function(){ openDifficulty(true); }, 500);
+    });
+  }
+  spinAllBtn.addEventListener('click', spinAll);
+
+  /* ---------- wheel management ---------- */
+  function updateEmpty(){ emptyEl.hidden = wheels.length > 0; }
+  function mount(w, after){
+    var el = buildCard(w);
+    if (after && after.ui) after.ui.el.after(el); else grid.appendChild(el);
+    draw(w);
+  }
+  function addWheel(){
+    var w = make({ title: 'New wheel', picks: 1, options: ['Option A','Option B','Option C'] });
+    wheels.push(w); mount(w); save(); updateEmpty(); renderSummary();
+    w.ui.el.scrollIntoView({ behavior: reduced() ? 'auto' : 'smooth', block: 'center' });
+    w.ui.title.focus(); w.ui.title.select();
+  }
+  function dupWheel(w){
+    var c = make({ title: (w.title + ' copy').slice(0, 60), picks: w.picks, locked: w.locked, options: w.options.slice() });
+    wheels.splice(wheels.indexOf(w) + 1, 0, c);
+    mount(c, w); save(); updateEmpty();
+    c.ui.title.focus(); c.ui.title.select();
+  }
+  function delWheel(w){
+    w.dead = true;
+    w.ui.el.remove();
+    wheels.splice(wheels.indexOf(w), 1);
+    save(); updateEmpty(); renderSummary(); busy();
+  }
+  function addOptions(w, lines){
+    var added = false;
+    lines.forEach(function(l){
+      l = l.trim().slice(0, 60);
+      if (l && w.options.length < MAX_OPTS){ w.options.push({ t: l }); added = true; }
+    });
+    if (!added) return;
+    w.picked = new Set();
+    renderOptions(w); draw(w); save();
+  }
+  function addFromInput(w){
+    var v = w.ui.addIn.value;
+    if (!v.trim()) { w.ui.addIn.focus(); return; }
+    addOptions(w, v.split(/\r?\n/));
+    w.ui.addIn.value = '';
+    w.ui.addIn.focus();
+  }
+
+  /* ---------- events ---------- */
+  grid.addEventListener('click', function(e){
+    var b = e.target.closest('[data-act]'); if (!b) return;
+    var card = b.closest('.wheel'); var w = card && byId(card.dataset.id); if (!w) return;
+    var act = b.dataset.act;
+    if (act === 'spin') spinWheel(w);
+    else if (act === 'dup') dupWheel(w);
+    else if (act === 'del') delWheel(w);
+    else if (act === 'pm'){ if (w.picks > 1){ w.picks--; renderPicks(w); save(); } }
+    else if (act === 'pp'){ if (w.picks < 12){ w.picks++; renderPicks(w); save(); } }
+    else if (act === 'add') addFromInput(w);
+    else if (act === 'pin'){
+      var po = w.options[+b.closest('li').dataset.i];
+      if (w.forced.has(po)) w.forced.delete(po); else w.forced.add(po);
+      b.classList.toggle('on', w.forced.has(po)); b.setAttribute('aria-pressed', w.forced.has(po) ? 'true' : 'false');
+    }
+    else if (act === 'rm'){
+      var i = +b.closest('li').dataset.i;
+      w.options.splice(i, 1); w.picked = new Set();
+      renderOptions(w); draw(w); save();
+    }
+  });
+  grid.addEventListener('input', function(e){
+    var t = e.target, card = t.closest('.wheel'); var w = card && byId(card.dataset.id); if (!w) return;
+    if (t.classList.contains('title')){ w.title = t.value; save(); renderSummary(); }
+    else if (t.classList.contains('opt')){
+      w.options[+t.closest('li').dataset.i].t = t.value; draw(w); save();
+    }
+  });
+  grid.addEventListener('change', function(e){
+    var t = e.target, card = t.closest('.wheel'); var w = card && byId(card.dataset.id); if (!w) return;
+    if (t.classList.contains('lock-cb')){ w.locked = t.checked; save(); busy(); }
+    else if (t.classList.contains('opt') && !t.value.trim()){
+      w.options.splice(+t.closest('li').dataset.i, 1); w.picked = new Set();
+      renderOptions(w); draw(w); save();
+    }
+  });
+  grid.addEventListener('keydown', function(e){
+    var t = e.target;
+    if (t.classList.contains('add-in') && e.key === 'Enter'){
+      e.preventDefault();
+      var card = t.closest('.wheel'); var w = card && byId(card.dataset.id); if (w) addFromInput(w);
+    }
+  });
+  grid.addEventListener('paste', function(e){
+    var t = e.target;
+    if (!t.classList || !t.classList.contains('add-in')) return;
+    var text = (e.clipboardData && e.clipboardData.getData('text')) || '';
+    if (text.indexOf('\n') === -1) return;
+    e.preventDefault();
+    var card = t.closest('.wheel'); var w = card && byId(card.dataset.id);
+    if (w) addOptions(w, text.split(/\r?\n/));
+  });
+
+  document.getElementById('add-wheel').addEventListener('click', addWheel);
+
+  var ruleList = document.getElementById('rule-list');
+  ruleList.addEventListener('input', function(e){
+    var t = e.target, li = t.closest('li'); if (!li) return;
+    var r = rules[+li.dataset.i]; if (!r) return;
+    if (t.classList.contains('r-if')) r.if = parseList(t.value);
+    else if (t.classList.contains('r-add')) r.add = parseList(t.value);
+    else return;
+    save(); renderSummary();
+  });
+  ruleList.addEventListener('change', function(e){
+    var t = e.target; if (!t.classList.contains('r-hard')) return;
+    var r = rules[+t.closest('li').dataset.i]; if (!r) return;
+    r.hard = t.checked; save(); renderSummary();
+  });
+  ruleList.addEventListener('click', function(e){
+    var b = e.target.closest('[data-rule="rm"]'); if (!b) return;
+    rules.splice(+b.closest('li').dataset.i, 1);
+    renderRules(); save(); renderSummary();
+  });
+  document.getElementById('add-rule').addEventListener('click', function(){
+    rules.push({ if: [], add: [], hard: false });
+    renderRules(); save();
+    var last = ruleList.lastElementChild; if (last) last.querySelector('.r-if').focus();
+  });
+  document.getElementById('cancel-in').addEventListener('input', function(e){
+    cancel = parseList(e.target.value); save(); renderSummary();
+  });
+
+  var resetTimer;
+  resetBtn.addEventListener('click', function(){
+    if (!resetBtn.classList.contains('confirm')){
+      resetBtn.classList.add('confirm'); resetBtn.textContent = 'Click again to replace all wheels';
+      resetTimer = setTimeout(function(){ resetBtn.classList.remove('confirm'); resetBtn.textContent = 'Reset to starter wheels'; }, 3500);
+      return;
+    }
+    clearTimeout(resetTimer);
+    resetBtn.classList.remove('confirm'); resetBtn.textContent = 'Reset to starter wheels';
+    wheels.forEach(function(w){ w.dead = true; });
+    grid.textContent = '';
+    wheels = starter().map(make);
+    wheels.forEach(function(w){ mount(w); });
+    rules = starterRules(); cancel = ['No compat mods']; renderRules();
+    diffs = starterDiffs(); diffOn = true; stdOn = true; diffResult = null;
+    diffOnEl.checked = true; stdOnEl.checked = true; renderDiffs();
+    links = starterLinks(); renderLinks();
+    save(); updateEmpty(); renderSummary(); busy();
+  });
+
+  /* ---------- mod difficulty roll (pop-up window) ---------- */
+  var dlg = document.getElementById('diff-dlg');
+  var dSpin = document.getElementById('diff-spin');
+  var dNote = document.getElementById('diff-note');
+  var dWheels = [];
+  var dCloseTimer;
+
+  /* groups whose mod is in the run (or that have no mod set); the rest are reported as skipped */
+  function activeDiffs(){
+    var q = computeReq(), act = [], skipped = [];
+    diffs.forEach(function(g){
+      if (!g.options.length) return;
+      var isMod = !!g.needs.trim();
+      if (isMod ? !diffOn : !stdOn) return;          /* its switch is off */
+      (needsMet(g.needs, q.present) ? act : skipped).push(g);
+    });
+    /* a wheel that lists other wheels in "replaces" takes their place while it is active */
+    var gone = {};
+    act.forEach(function(g){ (g.replaces || []).forEach(function(n){ gone[norm(n)] = true; }); });
+    return {
+      act: act.filter(function(g){ return !gone[norm(g.name)]; }),
+      replaced: act.filter(function(g){ return gone[norm(g.name)]; }),
+      skipped: skipped
+    };
+  }
+  function diffChip(r){
+    var s = chip({ text: r.text, color: r.color });
+    var sm = document.createElement('small'); sm.textContent = r.group + (r.why ? ' · ' + r.why : ''); s.appendChild(sm);
+    return s;
+  }
+  function openDifficulty(auto){
+    if (dlg.open) return;
+    var a = activeDiffs();
+    if (!a.act.length) return;
+    var box = document.getElementById('diff-wheels'); box.textContent = '';
+    dWheels = a.act.map(function(g){
+      var card = document.createElement('div'); card.className = 'dwheel';
+      card.innerHTML = '<h3></h3><div class="stage"><canvas></canvas><div class="pointer" aria-hidden="true"></div></div><div class="dres" aria-live="polite"></div>';
+      card.querySelector('h3').textContent = g.name;
+      if (g.options.length > 8) card.querySelector('.stage').style.maxWidth = '290px';
+      box.appendChild(card);
+      var canvas = card.querySelector('canvas'); canvas.setAttribute('aria-label', g.name + ' wheel');
+      var sel = null, rb = null;
+      if (debug){
+        var dbg = document.createElement('div'); dbg.className = 'dbg-row';
+        sel = document.createElement('select'); sel.className = 'dbg-sel'; sel.setAttribute('aria-label', 'Force result for ' + g.name);
+        var o0 = document.createElement('option'); o0.value = ''; o0.textContent = 'Random'; sel.appendChild(o0);
+        g.options.forEach(function(t, i){ var o = document.createElement('option'); o.value = i; o.textContent = 'Force: ' + t; sel.appendChild(o); });
+        if (debugDiff[g.name] && +debugDiff[g.name] < g.options.length) sel.value = debugDiff[g.name];
+        rb = document.createElement('button'); rb.type = 'button'; rb.className = 'btn sm'; rb.textContent = 'Re-roll';
+        dbg.appendChild(sel); dbg.appendChild(rb); card.appendChild(dbg);
+      }
+      var dw = { g: g, isMod: !!g.needs.trim(), multi: parseList(g.needs).length > 1, options: g.options.map(function(t){ return { t: t }; }), rot: Math.random() * TAU,
+        picked: new Set(), dead: false, spinning: false, result: null, cur: null, nat: null, ui: { canvas: canvas, res: card.querySelector('.dres'), sel: sel } };
+      if (sel) sel.addEventListener('change', function(){ debugDiff[g.name] = sel.value; });
+      if (rb) rb.addEventListener('click', function(){ spinDiffs([dw]); });
+      if (window.ResizeObserver) new ResizeObserver(function(){ draw(dw); }).observe(canvas);
+      return dw;
+    });
+    var sub = 'Wheels for what is in your run.';
+    if (a.replaced.length) sub += ' ' + a.replaced.map(function(g){ return g.name; }).join(' and ') + ' are covered by the combined wheel.';
+    var sk = a.skipped.filter(function(g){ return !(g.replaces || []).length; });
+    if (sk.length) sub += ' Skipped: ' + sk.map(function(g){ return g.name + ' (needs ' + g.needs + ')'; }).join(', ') + '.';
+    document.getElementById('diff-sub').textContent = sub;
+    dNote.textContent = ''; dSpin.disabled = false; dSpin.textContent = 'Spin';
+    if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
+    requestAnimationFrame(function(){ dWheels.forEach(draw); });
+    if (auto) setTimeout(function(){ spinDiffs(); }, 450);
+  }
+  /* ---- links between standard and mod difficulties ----
+     1) a mod difficulty in the "force" list (Malice) sets the standard difficulty to its top option (Legendary);
+        Masochist is not in it, so Master + Masochist can happen;
+     2) a standard difficulty at its top option pushes the mod difficulties in the "lift" list (Death and above, Eternity
+        and above) to their own top option: Death becomes Malice, Eternity becomes Masochist, Revengeance stays;
+        on a combined wheel it always gives the "both" option (Masochist), since Masochist overrides Death and Malice. */
+  function optParts(t){ return String(t).split('+').map(function(x){ return x.trim(); }).filter(Boolean); }
+  function inTop(p){ return links.top.some(function(x){ return norm(x) === norm(p); }); }
+  function inLift(p){ return links.lift.some(function(x){ return norm(x) === norm(p); }); }
+  function inForce(p){ return links.force.some(function(x){ return norm(x) === norm(p); }); }
+  function topPart(t){ var ps = optParts(t).filter(inForce); return ps.length ? ps[0] : null; }
+  function isNeutral(t){ var ps = optParts(t); return ps.length > 0 && ps.every(function(x){ return norm(x) === norm(links.neutral); }); }
+  /* on a combined wheel the always-set names (Masochist) don't count as "not normal", so they are not upgraded to Malice */
+  function neutralFor(w, t){
+    var ps = optParts(t);
+    return ps.length > 0 && ps.every(function(p){
+      return norm(p) === norm(links.neutral) || (w.multi && links.both.some(function(x){ return norm(x) === norm(p); }));
+    });
+  }
+  function stdTopIdx(w){
+    for (var i = 0; i < w.options.length; i++) if (norm(w.options[i].t) === norm(links.std)) return i;
+    return -1;
+  }
+  function modTopIdx(w){
+    var best = -1, bc = 0;
+    w.options.forEach(function(o, i){ var c = optParts(o.t).filter(inTop).length; if (c > bc){ bc = c; best = i; } });
+    return best;
+  }
+  /* on a wheel that needs several mods: the option made only of the "always set" names (e.g. Masochist) */
+  function bothIdx(w){
+    var want = links.both.map(norm).sort().join('|');
+    for (var i = 0; i < w.options.length; i++){
+      if (optParts(w.options[i].t).map(norm).sort().join('|') === want) return i;
+    }
+    return modTopIdx(w);
+  }
+  function applyLinks(ws, idx){
+    var out = idx.slice(), why = ws.map(function(){ return ''; });
+    if (!links.on) return { idx: out, why: why };
+    var changed = true, guard = 0;
+    while (changed && guard++ < 4){
+      changed = false;
+      var cause = null;
+      ws.forEach(function(w, i){ if (w.isMod && !cause) cause = topPart(w.options[out[i]].t); });
+      if (cause) ws.forEach(function(w, i){
+        var si = w.isMod ? -1 : stdTopIdx(w);
+        if (si >= 0 && out[i] !== si){ out[i] = si; why[i] = 'set by ' + cause; changed = true; }
+      });
+      var stdTop = ws.some(function(w, i){ return !w.isMod && stdTopIdx(w) >= 0 && out[i] === stdTopIdx(w); });
+      if (stdTop) ws.forEach(function(w, i){
+        if (!w.isMod) return;
+        var ti = -1;
+        if (w.multi && links.both.length) ti = bothIdx(w);          /* both mods present: Masochist overrides Death and Malice, so it is the result */
+        else if (optParts(w.options[out[i]].t).some(inLift)) ti = modTopIdx(w);
+        if (ti >= 0 && out[i] !== ti){ out[i] = ti; why[i] = 'set by ' + links.std; changed = true; }
+      });
+    }
+    return { idx: out, why: why };
+  }
+  async function spinOne(w, idx, quick, why){
+    w.spinning = true;
+    var n = w.options.length, a = TAU / n;
+    var jitter = (Math.random() - 0.5) * a * 0.7;
+    var want = mod(-((idx + 0.5) * a + jitter), TAU), delta = mod(want - mod(w.rot, TAU), TAU);
+    var rm = reduced();
+    var extra = rm ? 0 : (quick ? 1 : 5 + Math.floor(Math.random() * 2));
+    var dur = rm ? 450 : (quick ? 1000 : 3800 + Math.random() * 700);
+    await animateTo(w, w.rot + delta + extra * TAU, dur);
+    w.spinning = false;
+    if (w.dead) return;
+    w.rot = mod(w.rot, TAU);
+    w.result = { t: w.options[idx].t, color: colorFor(idx, n), why: why || '' };
+    w.cur = idx;
+    draw(w);
+    var c = chip({ text: w.result.t, color: w.result.color });
+    if (why){ var sm = document.createElement('small'); sm.textContent = why; c.appendChild(sm); }
+    w.ui.res.textContent = ''; w.ui.res.appendChild(c);
+  }
+  /* the slice the Force box asks for in debug mode, or -1 for a random roll */
+  function forcedIdx(w){
+    if (!debug || !w.ui.sel || w.ui.sel.value === '') return -1;
+    var v = +w.ui.sel.value;
+    return v >= 0 && v < w.options.length ? v : -1;
+  }
+  /* Spins every difficulty wheel, or only the wheels in `only` (debug re-roll). The other wheels keep their rolls,
+     the links are applied again, and any wheel the links change turns quickly to its new slice. */
+  async function spinDiffs(only){
+    var arr = dWheels;
+    if (!arr.length || arr.busy) return;
+    arr.busy = true;
+    try {
+      var batch = arr.slice();
+      var part = Array.isArray(only) && only.length > 0;
+      var sel = part ? only : batch;
+      clearTimeout(dCloseTimer);
+      dSpin.disabled = true; dSpin.textContent = 'Spinning…'; dNote.textContent = '';
+      /* pick every result first, apply the links, then spin: wheels that were not changed spin normally,
+         changed wheels turn quickly to their forced slice once the others have settled */
+      var nat = batch.map(function(w){
+        if (part && sel.indexOf(w) < 0 && w.nat != null) return w.nat;
+        var f = forcedIdx(w);
+        return f >= 0 ? f : Math.floor(Math.random() * w.options.length);
+      });
+      var plan = applyLinks(batch, nat);
+      var first = [], later = [];
+      batch.forEach(function(w, i){
+        w.nat = nat[i];
+        var rolled = sel.indexOf(w) >= 0;
+        var same = !!w.result && w.cur === plan.idx[i] && w.result.why === plan.why[i];
+        if (!rolled && same) return;                    /* an untouched wheel keeps its result */
+        w.result = null; w.ui.res.textContent = '';
+        ((plan.why[i] || !rolled) ? later : first).push(i);
+      });
+      await Promise.all(first.map(function(i, k){ return sleep(k * 250).then(function(){ return spinOne(batch[i], plan.idx[i], false, ''); }); }));
+      if (batch.some(function(w){ return w.dead; })) return;
+      if (later.length){
+        await sleep(350);
+        await Promise.all(later.map(function(i){ return spinOne(batch[i], plan.idx[i], true, plan.why[i]); }));
+      }
+      if (batch.some(function(w){ return w.dead; })) return;
+      diffResult = batch.map(function(w){ return { group: w.g.name, text: w.result.t, color: w.result.color, why: w.result.why }; });
+      renderSummary();
+      dSpin.disabled = false; dSpin.textContent = 'Spin again';
+      clearTimeout(dCloseTimer);
+      if (debug){
+        dNote.textContent = 'Added to Your run.';          /* stay open so single wheels can be re-rolled */
+      } else {
+        dNote.textContent = 'Added to Your run. Closing…';
+        dCloseTimer = setTimeout(function(){ if (dlg.open) dlg.close(); }, 2000);
+      }
+    } finally {
+      arr.busy = false;
+    }
+  }
+  dSpin.addEventListener('click', function(){ spinDiffs(); });
+  document.getElementById('diff-close').addEventListener('click', function(){ dlg.close(); });
+  dlg.addEventListener('close', function(){ clearTimeout(dCloseTimer); dWheels.forEach(function(w){ w.dead = true; }); });
+  dlg.addEventListener('click', function(e){ if (e.target === dlg) dlg.close(); });
+  runList.addEventListener('click', function(e){
+    if (e.target.closest('[data-diff]')) openDifficulty(true);
+  });
+  var diffOnEl = document.getElementById('diff-on');
+  var stdOnEl = document.getElementById('std-on');
+  diffOnEl.addEventListener('change', function(){ diffOn = diffOnEl.checked; diffResult = null; save(); renderSummary(); });
+  stdOnEl.addEventListener('change', function(){ stdOn = stdOnEl.checked; diffResult = null; save(); renderSummary(); });
+
+  /* difficulty wheel editor */
+  var diffList = document.getElementById('diff-list');
+  function renderDiffs(){
+    diffList.textContent = '';
+    diffs.forEach(function(g, i){
+      var li = document.createElement('li'); li.className = 'dgroup'; li.dataset.i = i;
+      li.innerHTML =
+        '<div class="rf nm"><label for="dn-' + i + '">Wheel name</label><input class="r-in d-name" id="dn-' + i + '" maxlength="60"></div>' +
+        '<div class="rf nd"><label for="dm-' + i + '">Only when in the run</label><input class="r-in d-needs" id="dm-' + i + '" maxlength="120" placeholder="mods, or blank = always"></div>' +
+        '<button class="btn ghost sm sq rm" type="button" data-diff-rm="1" aria-label="Remove difficulty wheel ' + (i + 1) + '">×</button>' +
+        '<div class="rf op"><label for="do-' + i + '">Options (comma separated)</label><input class="r-in d-opts" id="do-' + i + '" maxlength="240" placeholder="e.g. Revengeance, Death, Malice"></div>' +
+        '<div class="rf rp"><label for="dr-' + i + '">Replaces these wheels when it appears</label><input class="r-in d-repl" id="dr-' + i + '" maxlength="240" placeholder="wheel names, or blank = none"></div>';
+      li.querySelector('.d-name').value = g.name;
+      li.querySelector('.d-needs').value = g.needs;
+      li.querySelector('.d-opts').value = g.options.join(', ');
+      li.querySelector('.d-repl').value = (g.replaces || []).join(', ');
+      diffList.appendChild(li);
+    });
+  }
+  diffList.addEventListener('input', function(e){
+    var t = e.target, li = t.closest('li'); if (!li) return;
+    var g = diffs[+li.dataset.i]; if (!g) return;
+    if (t.classList.contains('d-name')) g.name = t.value.slice(0, 60);
+    else if (t.classList.contains('d-needs')) g.needs = t.value.slice(0, 120);
+    else if (t.classList.contains('d-opts')) g.options = parseList(t.value);
+    else if (t.classList.contains('d-repl')) g.replaces = parseList(t.value);
+    else return;
+    diffResult = null; save(); renderSummary();
+  });
+  diffList.addEventListener('click', function(e){
+    var b = e.target.closest('[data-diff-rm]'); if (!b) return;
+    diffs.splice(+b.closest('li').dataset.i, 1);
+    diffResult = null; renderDiffs(); save(); renderSummary();
+  });
+  document.getElementById('add-diff').addEventListener('click', function(){
+    diffs.push({ name: 'New difficulty wheel', needs: '', options: [], replaces: [] });
+    renderDiffs(); save(); renderSummary();
+    var last = diffList.lastElementChild;
+    if (last){ var n = last.querySelector('.d-name'); n.focus(); n.select(); }
+  });
+
+  /* difficulty link settings */
+  var linkOnEl = document.getElementById('link-on');
+  var linkStdEl = document.getElementById('link-std');
+  var linkTopEl = document.getElementById('link-top');
+  var linkForceEl = document.getElementById('link-force');
+  var linkLiftEl = document.getElementById('link-lift');
+  var linkNeutralEl = document.getElementById('link-neutral');
+  var linkBothEl = document.getElementById('link-both');
+  function renderLinks(){
+    linkBothEl.value = links.both.join(', ');
+    linkOnEl.checked = links.on;
+    linkStdEl.value = links.std;
+    linkTopEl.value = links.top.join(', ');
+    linkForceEl.value = links.force.join(', ');
+    linkLiftEl.value = links.lift.join(', ');
+    linkNeutralEl.value = links.neutral;
+  }
+  function readLinks(){
+    links = cleanLinks({ on: linkOnEl.checked, std: linkStdEl.value, top: parseList(linkTopEl.value), force: parseList(linkForceEl.value), lift: parseList(linkLiftEl.value), neutral: linkNeutralEl.value, both: parseList(linkBothEl.value) });
+    diffResult = null; save(); renderSummary();       /* a roll made under the old link settings no longer applies */
+  }
+  [linkOnEl, linkStdEl, linkTopEl, linkForceEl, linkLiftEl, linkNeutralEl, linkBothEl].forEach(function(el){
+    el.addEventListener(el === linkOnEl ? 'change' : 'input', readLinks);
+  });
+  /* leaving a field shows what is really in effect: blank names fall back to their defaults, lists are tidied */
+  [linkStdEl, linkTopEl, linkForceEl, linkLiftEl, linkNeutralEl, linkBothEl].forEach(function(el){
+    el.addEventListener('change', renderLinks);
+  });
+
+  /* ---------- debug mode (Konami code) ---------- */
+  var debugBar = document.getElementById('debugbar');
+  function setDebug(on){
+    debug = on;
+    if (!on){ wheels.forEach(function(w){ w.forced = new Set(); }); debugDiff = {}; }
+    debugBar.hidden = !on;
+    wheels.forEach(renderOptions);
+    say(on ? 'Debug mode on' : 'Debug mode off');
+  }
+  document.getElementById('dbg-clear').addEventListener('click', function(){
+    wheels.forEach(function(w){ w.forced = new Set(); }); debugDiff = {};
+    wheels.forEach(renderOptions); say('Pins cleared');
+  });
+  document.getElementById('dbg-exit').addEventListener('click', function(){ setDebug(false); });
+  var KONAMI = ['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a','Enter'];
+  var kpos = 0;
+  document.addEventListener('keydown', function(e){
+    var t = e.target, tag = t && t.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)){ kpos = 0; return; }
+    if (e.repeat || e.ctrlKey || e.metaKey || e.altKey) return;
+    var k = e.key && e.key.length === 1 ? e.key.toLowerCase() : e.key;
+    if (k === KONAMI[kpos]){
+      kpos++;
+      if (kpos === KONAMI.length){ kpos = 0; e.preventDefault(); setDebug(!debug); }   /* Enter must not press a focused button */
+    } else {
+      kpos = (k === 'ArrowUp') ? (kpos === 2 ? 2 : 1) : 0;     /* a third Up still leaves "Up Up" typed */
+    }
+  });
+
+  /* ---------- boot ---------- */
+  var saved = load();
+  wheels = (saved ? saved.wheels : starter()).map(make);
+  rules = saved ? saved.rules : starterRules();
+  cancel = saved ? saved.cancel : ['No compat mods'];
+  diffs = saved ? saved.diffs : starterDiffs();
+  diffOn = saved ? saved.diffOn : true;
+  stdOn = saved ? saved.stdOn : true;
+  links = saved ? saved.links : starterLinks();
+  diffOnEl.checked = diffOn;
+  stdOnEl.checked = stdOn;
+  wheels.forEach(function(w){ mount(w); });
+  renderRules(); renderDiffs(); renderLinks(); updateEmpty(); renderSummary(); busy();
+  if (document.fonts && document.fonts.ready){
+    document.fonts.ready.then(function(){ wheels.forEach(draw); });
+  }
+})();
+</script>
+</body>
+</html>
